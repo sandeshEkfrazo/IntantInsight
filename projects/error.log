@@ -1,0 +1,122 @@
+[Mon Feb 20 13:13:44.354224 2023] [wsgi:error] [pid 3055203:tid 140013261489920] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Mon Feb 20 13:13:44.354307 2023] [wsgi:error] [pid 3055203:tid 140013261489920] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Mon Feb 20 13:13:44.354310 2023] [wsgi:error] [pid 3055203:tid 140013261489920]   import numpy
+[Mon Feb 20 13:13:45.472192 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] d==>
+[Mon Feb 20 13:13:45.472249 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450]  
+[Mon Feb 20 13:13:45.472263 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 1
+[Mon Feb 20 13:13:45.472275 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450]  
+[Mon Feb 20 13:13:45.472288 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] Copy(2)
+[Mon Feb 20 13:13:45.472300 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 
+[Mon Feb 20 13:13:45.626846 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] cuurent time==>
+[Mon Feb 20 13:13:45.626884 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450]  
+[Mon Feb 20 13:13:45.626893 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 13:13:45
+[Mon Feb 20 13:13:45.626901 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 
+[Mon Feb 20 13:13:45.741337 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 4e1c6
+[Mon Feb 20 13:13:45.741372 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 
+[Mon Feb 20 13:13:45.830108 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] pbkdf2_sha256$260000$csdRWCeGI9O3cHsx0yvqc0$EnwjDqWl8r3ecy24uoRzWPHDaZkeabcZvUcV57pK6io=
+[Mon Feb 20 13:13:45.830158 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 
+[Mon Feb 20 13:13:45.920771 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] True
+[Mon Feb 20 13:13:45.920838 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 98.166.162.48:42450] 
+[Mon Feb 20 13:13:54.400101 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] printing vendor id true or false==>
+[Mon Feb 20 13:13:54.400158 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458]  
+[Mon Feb 20 13:13:54.400168 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] True
+[Mon Feb 20 13:13:54.400178 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458]  
+[Mon Feb 20 13:13:54.400187 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] completed
+[Mon Feb 20 13:13:54.400196 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] 
+[Mon Feb 20 13:13:54.405830 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] coming to else block supplier id is
+[Mon Feb 20 13:13:54.405927 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458]  
+[Mon Feb 20 13:13:54.405938 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] 228
+[Mon Feb 20 13:13:54.405948 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] 
+[Mon Feb 20 13:13:54.415678 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] 1
+[Mon Feb 20 13:13:54.415718 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 98.166.162.48:42458] 
+[Mon Feb 20 13:13:56.208191 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] coming to vendor mask link
+[Mon Feb 20 13:13:56.208247 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560]  
+[Mon Feb 20 13:13:56.208257 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] XXXX
+[Mon Feb 20 13:13:56.208265 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] 
+[Mon Feb 20 13:13:56.208367 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] encoded user id====>>>
+[Mon Feb 20 13:13:56.208379 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] 
+[Mon Feb 20 13:13:56.211446 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] screening_link
+[Mon Feb 20 13:13:56.211491 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560]  
+[Mon Feb 20 13:13:56.211510 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] https://instantinsightz.com/surveyTemplate?uid=&screening_id=25
+[Mon Feb 20 13:13:56.211521 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24560] 
+[Mon Feb 20 13:14:06.869675 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554] Internal Server Error: /api/campaign/verify
+[Mon Feb 20 13:14:06.869721 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554] Traceback (most recent call last):
+[Mon Feb 20 13:14:06.869724 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/exception.py", line 47, in inner
+[Mon Feb 20 13:14:06.869727 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     response = get_response(request)
+[Mon Feb 20 13:14:06.869729 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/base.py", line 181, in _get_response
+[Mon Feb 20 13:14:06.869732 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Feb 20 13:14:06.869734 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+[Mon Feb 20 13:14:06.869737 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     return view_func(*args, **kwargs)
+[Mon Feb 20 13:14:06.869739 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/generic/base.py", line 70, in view
+[Mon Feb 20 13:14:06.869742 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     return self.dispatch(request, *args, **kwargs)
+[Mon Feb 20 13:14:06.869744 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 511, in dispatch
+[Mon Feb 20 13:14:06.869746 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     self.response = self.finalize_response(request, response, *args, **kwargs)
+[Mon Feb 20 13:14:06.869749 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 423, in finalize_response
+[Mon Feb 20 13:14:06.869751 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554]     assert isinstance(response, HttpResponseBase), (
+[Mon Feb 20 13:14:06.869754 2023] [wsgi:error] [pid 3055203:tid 140013160777472] [remote 106.217.49.13:24554] AssertionError: Expected a `Response`, `HttpResponse` or `HttpStreamingResponse` to be returned from the view, but received a `<class 'NoneType'>`
+[Mon Feb 20 13:16:02.029014 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] printing vendor id true or false==>
+[Mon Feb 20 13:16:02.029700 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012]  
+[Mon Feb 20 13:16:02.029717 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] True
+[Mon Feb 20 13:16:02.029727 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012]  
+[Mon Feb 20 13:16:02.029736 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] terminated
+[Mon Feb 20 13:16:02.029745 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] 
+[Mon Feb 20 13:16:02.035446 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] coming to else block supplier id is
+[Mon Feb 20 13:16:02.035517 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012]  
+[Mon Feb 20 13:16:02.035538 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] 228
+[Mon Feb 20 13:16:02.035554 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] 
+[Mon Feb 20 13:16:02.042224 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] 2
+[Mon Feb 20 13:16:02.042290 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 72.24.225.6:58012] 
+[Mon Feb 20 13:16:41.409419 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] coming to vendor mask link
+[Mon Feb 20 13:16:41.409774 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446]  
+[Mon Feb 20 13:16:41.409791 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] cb679676-c357-4209-9719-d9551d8036a2
+[Mon Feb 20 13:16:41.409803 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] 
+[Mon Feb 20 13:16:41.410265 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] encoded user id====>>>
+[Mon Feb 20 13:16:41.410292 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] 
+[Mon Feb 20 13:16:41.414734 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] str(vid)==>>
+[Mon Feb 20 13:16:41.414785 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446]  
+[Mon Feb 20 13:16:41.414801 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] cb679676-c357-4209-9719-d9551d8036a2
+[Mon Feb 20 13:16:41.414813 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] 
+[Mon Feb 20 13:16:41.414865 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] updated_link
+[Mon Feb 20 13:16:41.414879 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446]  
+[Mon Feb 20 13:16:41.414896 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] https://edgeapi.innovatemr.net/startSurvey?survNum=PgoWzLXP&supCode=85&PID=b6d2093b-b0
+[Mon Feb 20 13:16:41.414907 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 69.246.198.29:60446] 
+[Mon Feb 20 13:16:48.137814 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] coming to vendor mask link
+[Mon Feb 20 13:16:48.137929 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858]  
+[Mon Feb 20 13:16:48.137948 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] XXXX
+[Mon Feb 20 13:16:48.137963 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] 
+[Mon Feb 20 13:16:48.138104 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] encoded user id====>>>
+[Mon Feb 20 13:16:48.138127 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] 
+[Mon Feb 20 13:16:48.140438 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] screening_link
+[Mon Feb 20 13:16:48.140499 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858]  
+[Mon Feb 20 13:16:48.140560 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] https://instantinsightz.com/surveyTemplate?uid=&screening_id=25
+[Mon Feb 20 13:16:48.140580 2023] [wsgi:error] [pid 3055203:tid 140013261489920] [remote 106.217.49.13:24858] 
+[Mon Feb 20 13:16:49.239724 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856] Internal Server Error: /api/campaign/verify
+[Mon Feb 20 13:16:49.239782 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856] Traceback (most recent call last):
+[Mon Feb 20 13:16:49.239786 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/exception.py", line 47, in inner
+[Mon Feb 20 13:16:49.239790 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     response = get_response(request)
+[Mon Feb 20 13:16:49.239792 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/base.py", line 181, in _get_response
+[Mon Feb 20 13:16:49.239796 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Feb 20 13:16:49.239799 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+[Mon Feb 20 13:16:49.239802 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     return view_func(*args, **kwargs)
+[Mon Feb 20 13:16:49.239805 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/generic/base.py", line 70, in view
+[Mon Feb 20 13:16:49.239808 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     return self.dispatch(request, *args, **kwargs)
+[Mon Feb 20 13:16:49.239810 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 511, in dispatch
+[Mon Feb 20 13:16:49.239812 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     self.response = self.finalize_response(request, response, *args, **kwargs)
+[Mon Feb 20 13:16:49.239815 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 423, in finalize_response
+[Mon Feb 20 13:16:49.239817 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856]     assert isinstance(response, HttpResponseBase), (
+[Mon Feb 20 13:16:49.239819 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24856] AssertionError: Expected a `Response`, `HttpResponse` or `HttpStreamingResponse` to be returned from the view, but received a `<class 'NoneType'>`
+[Mon Feb 20 13:17:15.900744 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826] Internal Server Error: /api/campaign/verify
+[Mon Feb 20 13:17:15.900781 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826] Traceback (most recent call last):
+[Mon Feb 20 13:17:15.900784 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/exception.py", line 47, in inner
+[Mon Feb 20 13:17:15.900787 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     response = get_response(request)
+[Mon Feb 20 13:17:15.900790 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/django/core/handlers/base.py", line 181, in _get_response
+[Mon Feb 20 13:17:15.900803 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Mon Feb 20 13:17:15.900806 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+[Mon Feb 20 13:17:15.900808 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     return view_func(*args, **kwargs)
+[Mon Feb 20 13:17:15.900810 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/django/views/generic/base.py", line 70, in view
+[Mon Feb 20 13:17:15.900813 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     return self.dispatch(request, *args, **kwargs)
+[Mon Feb 20 13:17:15.900815 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 511, in dispatch
+[Mon Feb 20 13:17:15.900817 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     self.response = self.finalize_response(request, response, *args, **kwargs)
+[Mon Feb 20 13:17:15.900820 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]   File "/instantInsight/venv/lib/python3.8/site-packages/rest_framework/views.py", line 423, in finalize_response
+[Mon Feb 20 13:17:15.900822 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826]     assert isinstance(response, HttpResponseBase), (
+[Mon Feb 20 13:17:15.900824 2023] [wsgi:error] [pid 3055203:tid 140013143992064] [remote 106.217.49.13:24826] AssertionError: Expected a `Response`, `HttpResponse` or `HttpStreamingResponse` to be returned from the view, but received a `<class 'NoneType'>`

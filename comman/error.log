@@ -1,0 +1,212 @@
+[Mon Feb 06 16:10:52.672907 2023] [wsgi:error] [pid 2839162:tid 140370634155776] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Mon Feb 06 16:10:52.672963 2023] [wsgi:error] [pid 2839162:tid 140370634155776] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Mon Feb 06 16:10:52.672966 2023] [wsgi:error] [pid 2839162:tid 140370634155776]   import numpy
+[Mon Feb 06 16:10:53.532482 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] d==>
+[Mon Feb 06 16:10:53.532530 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]  
+[Mon Feb 06 16:10:53.532539 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 1
+[Mon Feb 06 16:10:53.532547 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]  
+[Mon Feb 06 16:10:53.532556 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] Copy(2)
+[Mon Feb 06 16:10:53.532564 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:53.654998 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 10 di
+[Mon Feb 06 16:10:53.655055 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]  
+[Mon Feb 06 16:10:53.655066 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] bb0ed534-a6
+[Mon Feb 06 16:10:53.655075 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:53.655906 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] cuurent time==>
+[Mon Feb 06 16:10:53.655925 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]  
+[Mon Feb 06 16:10:53.655936 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 16:10:53
+[Mon Feb 06 16:10:53.655944 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:53.789937 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] bb0ed
+[Mon Feb 06 16:10:53.789981 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:53.893991 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] pbkdf2_sha256$260000$tlFcxfMB9GAKUfqEs2gO9x$aDWe1sZA6dE6l8JVEgd6HlAM9BpSyurHA/EVM/f9M0g=
+[Mon Feb 06 16:10:53.894044 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:53.986597 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] True
+[Mon Feb 06 16:10:53.986649 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.298785 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] /instantInsight/django/server/panelengagement/views.py:239: GuessedAtParserWarning: No parser was explicitly specified, so I'm using the best available HTML parser for this system ("html.parser"). This usually isn't a problem, but if you run this code on another system, or in a different virtual environment, it may use a different parser and behave differently.
+[Mon Feb 06 16:10:54.298827 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.298830 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] The code that caused this warning is on line 239 of the file /instantInsight/django/server/panelengagement/views.py. To get rid of this warning, pass the additional argument 'features="html.parser"' to the BeautifulSoup constructor.
+[Mon Feb 06 16:10:54.298833 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.298848 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]   soup = BeautifulSoup(email_body, 'html')
+[Mon Feb 06 16:10:54.309967 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] datetime_object==>
+[Mon Feb 06 16:10:54.310006 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508]  
+[Mon Feb 06 16:10:54.310018 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 2023-02-06 16:07:00
+[Mon Feb 06 16:10:54.310030 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.411295 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] prompt (trigger: date[2023-02-06 16:07:00 IST], pending)
+[Mon Feb 06 16:10:54.411347 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.412573 2023] [wsgi:error] [pid 2839162:tid 140370160600832] Exception in thread 
+[Mon Feb 06 16:10:54.412606 2023] [wsgi:error] [pid 2839162:tid 140370160600832] APScheduler
+[Mon Feb 06 16:10:54.412620 2023] [wsgi:error] [pid 2839162:tid 140370160600832] :
+[Mon Feb 06 16:10:54.412638 2023] [wsgi:error] [pid 2839162:tid 140370160600832] Traceback (most recent call last):
+[Mon Feb 06 16:10:54.412658 2023] [wsgi:error] [pid 2839162:tid 140370160600832]   File "/usr/lib/python3.8/threading.py", line 932, in _bootstrap_inner
+[Mon Feb 06 16:10:54.412801 2023] [wsgi:error] [pid 2839162:tid 140370152208128] Run time of job "prompt (trigger: date[2023-02-06 16:07:00 IST], next run at: 2023-02-06 16:07:00 IST)" was missed by 0:03:54.412217
+[Mon Feb 06 16:10:54.413501 2023] [wsgi:error] [pid 2839162:tid 140370160600832]     
+[Mon Feb 06 16:10:54.413528 2023] [wsgi:error] [pid 2839162:tid 140370160600832] self.run()
+[Mon Feb 06 16:10:54.413541 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.413562 2023] [wsgi:error] [pid 2839162:tid 140370160600832]   File "/usr/lib/python3.8/threading.py", line 870, in run
+[Mon Feb 06 16:10:54.413834 2023] [wsgi:error] [pid 2839162:tid 140370160600832]     
+[Mon Feb 06 16:10:54.413986 2023] [wsgi:error] [pid 2839162:tid 140370160600832] self._target(*self._args, **self._kwargs)
+[Mon Feb 06 16:10:54.414020 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.414047 2023] [wsgi:error] [pid 2839162:tid 140370160600832]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/blocking.py", line 32, in _main_loop
+[Mon Feb 06 16:10:54.414380 2023] [wsgi:error] [pid 2839162:tid 140370160600832]     
+[Mon Feb 06 16:10:54.414404 2023] [wsgi:error] [pid 2839162:tid 140370160600832] wait_seconds = self._process_jobs()
+[Mon Feb 06 16:10:54.414417 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.414441 2023] [wsgi:error] [pid 2839162:tid 140370160600832]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/base.py", line 1001, in _process_jobs
+[Mon Feb 06 16:10:54.414824 2023] [wsgi:error] [pid 2839162:tid 140370160600832]     
+[Mon Feb 06 16:10:54.414850 2023] [wsgi:error] [pid 2839162:tid 140370160600832] self.remove_job(job.id, jobstore_alias)
+[Mon Feb 06 16:10:54.414863 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.414888 2023] [wsgi:error] [pid 2839162:tid 140370160600832]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/base.py", line 625, in remove_job
+[Mon Feb 06 16:10:54.415139 2023] [wsgi:error] [pid 2839162:tid 140370160600832]     
+[Mon Feb 06 16:10:54.415166 2023] [wsgi:error] [pid 2839162:tid 140370160600832] raise JobLookupError(job_id)
+[Mon Feb 06 16:10:54.415179 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.415201 2023] [wsgi:error] [pid 2839162:tid 140370160600832] apscheduler.jobstores.base
+[Mon Feb 06 16:10:54.415216 2023] [wsgi:error] [pid 2839162:tid 140370160600832] .
+[Mon Feb 06 16:10:54.415244 2023] [wsgi:error] [pid 2839162:tid 140370160600832] JobLookupError
+[Mon Feb 06 16:10:54.415260 2023] [wsgi:error] [pid 2839162:tid 140370160600832] : 
+[Mon Feb 06 16:10:54.415276 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 'No job by the id of 256888d4cd6d448b801dc8621ba3b42c was found'
+[Mon Feb 06 16:10:54.415287 2023] [wsgi:error] [pid 2839162:tid 140370160600832] 
+[Mon Feb 06 16:10:54.437670 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] prompt (trigger: date[2023-02-06 16:07:00 IST], pending)
+[Mon Feb 06 16:10:54.437724 2023] [wsgi:error] [pid 2839162:tid 140370634155776] [remote 49.37.249.102:39508] 
+[Mon Feb 06 16:10:54.439746 2023] [wsgi:error] [pid 2839162:tid 140370152208128] Error submitting job "prompt (trigger: date[2023-02-06 16:07:00 IST], next run at: 2023-02-06 16:07:00 IST)" to executor "default"
+[Mon Feb 06 16:10:54.439761 2023] [wsgi:error] [pid 2839162:tid 140370152208128] Traceback (most recent call last):
+[Mon Feb 06 16:10:54.439764 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/base.py", line 978, in _process_jobs
+[Mon Feb 06 16:10:54.439766 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     executor.submit_job(job, run_times)
+[Mon Feb 06 16:10:54.439768 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/executors/base.py", line 71, in submit_job
+[Mon Feb 06 16:10:54.439771 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     self._do_submit_job(job, run_times)
+[Mon Feb 06 16:10:54.439773 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/executors/pool.py", line 28, in _do_submit_job
+[Mon Feb 06 16:10:54.439775 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     f = self._pool.submit(run_job, job, job._jobstore_alias, run_times, self._logger.name)
+[Mon Feb 06 16:10:54.439777 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/usr/lib/python3.8/concurrent/futures/thread.py", line 179, in submit
+[Mon Feb 06 16:10:54.439780 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     raise RuntimeError('cannot schedule new futures after shutdown')
+[Mon Feb 06 16:10:54.439782 2023] [wsgi:error] [pid 2839162:tid 140370152208128] RuntimeError: cannot schedule new futures after shutdown
+[Mon Feb 06 16:10:54.439882 2023] [wsgi:error] [pid 2839162:tid 140370152208128] Exception in thread 
+[Mon Feb 06 16:10:54.439898 2023] [wsgi:error] [pid 2839162:tid 140370152208128] APScheduler
+[Mon Feb 06 16:10:54.439906 2023] [wsgi:error] [pid 2839162:tid 140370152208128] :
+[Mon Feb 06 16:10:54.439919 2023] [wsgi:error] [pid 2839162:tid 140370152208128] Traceback (most recent call last):
+[Mon Feb 06 16:10:54.439937 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/usr/lib/python3.8/threading.py", line 932, in _bootstrap_inner
+[Mon Feb 06 16:10:54.440221 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     
+[Mon Feb 06 16:10:54.440234 2023] [wsgi:error] [pid 2839162:tid 140370152208128] self.run()
+[Mon Feb 06 16:10:54.440242 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+[Mon Feb 06 16:10:54.440255 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/usr/lib/python3.8/threading.py", line 870, in run
+[Mon Feb 06 16:10:54.440453 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     
+[Mon Feb 06 16:10:54.440465 2023] [wsgi:error] [pid 2839162:tid 140370152208128] self._target(*self._args, **self._kwargs)
+[Mon Feb 06 16:10:54.440473 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+[Mon Feb 06 16:10:54.440487 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/blocking.py", line 32, in _main_loop
+[Mon Feb 06 16:10:54.440540 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     
+[Mon Feb 06 16:10:54.440572 2023] [wsgi:error] [pid 2839162:tid 140370152208128] wait_seconds = self._process_jobs()
+[Mon Feb 06 16:10:54.440596 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+[Mon Feb 06 16:10:54.440619 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/base.py", line 1001, in _process_jobs
+[Mon Feb 06 16:10:54.440873 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     
+[Mon Feb 06 16:10:54.440886 2023] [wsgi:error] [pid 2839162:tid 140370152208128] self.remove_job(job.id, jobstore_alias)
+[Mon Feb 06 16:10:54.440894 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+[Mon Feb 06 16:10:54.440908 2023] [wsgi:error] [pid 2839162:tid 140370152208128]   File "/instantInsight/venv/lib/python3.8/site-packages/apscheduler/schedulers/base.py", line 625, in remove_job
+[Mon Feb 06 16:10:54.441069 2023] [wsgi:error] [pid 2839162:tid 140370152208128]     
+[Mon Feb 06 16:10:54.441081 2023] [wsgi:error] [pid 2839162:tid 140370152208128] raise JobLookupError(job_id)
+[Mon Feb 06 16:10:54.441089 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+[Mon Feb 06 16:10:54.441100 2023] [wsgi:error] [pid 2839162:tid 140370152208128] apscheduler.jobstores.base
+[Mon Feb 06 16:10:54.441108 2023] [wsgi:error] [pid 2839162:tid 140370152208128] .
+[Mon Feb 06 16:10:54.441117 2023] [wsgi:error] [pid 2839162:tid 140370152208128] JobLookupError
+[Mon Feb 06 16:10:54.441125 2023] [wsgi:error] [pid 2839162:tid 140370152208128] : 
+[Mon Feb 06 16:10:54.441136 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 'No job by the id of 341ff894d1274a208b3937136da3c039 was found'
+[Mon Feb 06 16:10:54.441143 2023] [wsgi:error] [pid 2839162:tid 140370152208128] 
+Exception ignored in: <function BaseEventLoop.__del__ at 0x7faa8dfebb80>
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/asyncio/base_events.py", line 654, in __del__
+NameError: name 'ResourceWarning' is not defined
+Exception ignored in: <function Local.__del__ at 0x7faa8df630d0>
+Traceback (most recent call last):
+  File "/instantInsight/venv/lib/python3.8/site-packages/asgiref/local.py", line 94, in __del__
+NameError: name 'TypeError' is not defined
+[Mon Feb 06 16:12:04.125697 2023] [wsgi:error] [pid 2839274:tid 139690175661824] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Mon Feb 06 16:12:04.125763 2023] [wsgi:error] [pid 2839274:tid 139690175661824] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Mon Feb 06 16:12:04.125766 2023] [wsgi:error] [pid 2839274:tid 139690175661824]   import numpy
+[Mon Feb 06 16:12:04.906216 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] d==>
+[Mon Feb 06 16:12:04.906257 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]  
+[Mon Feb 06 16:12:04.906267 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 1
+[Mon Feb 06 16:12:04.906275 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]  
+[Mon Feb 06 16:12:04.906283 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] Copy(2)
+[Mon Feb 06 16:12:04.906352 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.007442 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 10 di
+[Mon Feb 06 16:12:05.007493 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]  
+[Mon Feb 06 16:12:05.007505 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] e5965868-a6
+[Mon Feb 06 16:12:05.007531 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.008388 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] cuurent time==>
+[Mon Feb 06 16:12:05.008416 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]  
+[Mon Feb 06 16:12:05.008426 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 16:12:05
+[Mon Feb 06 16:12:05.008433 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.113676 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] e5965
+[Mon Feb 06 16:12:05.113714 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.196918 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] pbkdf2_sha256$260000$PlHk1jTLAGWriQEUMVp8un$hA/IqFKlPtSp4wwn1ibp4PLHobfwkf77fLjsgOIM+Dg=
+[Mon Feb 06 16:12:05.196966 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.280499 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] True
+[Mon Feb 06 16:12:05.280549 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.590920 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] /instantInsight/django/server/panelengagement/views.py:239: GuessedAtParserWarning: No parser was explicitly specified, so I'm using the best available HTML parser for this system ("html.parser"). This usually isn't a problem, but if you run this code on another system, or in a different virtual environment, it may use a different parser and behave differently.
+[Mon Feb 06 16:12:05.590960 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.590963 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] The code that caused this warning is on line 239 of the file /instantInsight/django/server/panelengagement/views.py. To get rid of this warning, pass the additional argument 'features="html.parser"' to the BeautifulSoup constructor.
+[Mon Feb 06 16:12:05.590966 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.590968 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]   soup = BeautifulSoup(email_body, 'html')
+[Mon Feb 06 16:12:05.601788 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] datetime_object==>
+[Mon Feb 06 16:12:05.601833 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827]  
+[Mon Feb 06 16:12:05.601842 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 2023-02-06 16:13:00
+[Mon Feb 06 16:12:05.601888 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.689587 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] prompt (trigger: date[2023-02-06 16:13:00 IST], pending)
+[Mon Feb 06 16:12:05.689628 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:12:05.711146 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] prompt (trigger: date[2023-02-06 16:13:00 IST], pending)
+[Mon Feb 06 16:12:05.711193 2023] [wsgi:error] [pid 2839274:tid 139690175661824] [remote 49.37.249.102:38827] 
+[Mon Feb 06 16:14:18.862934 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] str(vid)==>>
+[Mon Feb 06 16:14:18.863008 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903]  
+[Mon Feb 06 16:14:18.863027 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] 63e0d96e-7680-4a80-a289-6599b7b44a99
+[Mon Feb 06 16:14:18.863042 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] 
+[Mon Feb 06 16:14:18.863105 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] updated_link
+[Mon Feb 06 16:14:18.863119 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903]  
+[Mon Feb 06 16:14:18.863154 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] https://edgeapi.innovatemr.net/startSurvey?survNum=vxdGgZRv&supCode=85&PID=355f125f-a6
+[Mon Feb 06 16:14:18.863169 2023] [wsgi:error] [pid 2839274:tid 139690058163968] [remote 80.187.108.158:27903] 
+Exception ignored in: <function BaseEventLoop.__del__ at 0x7f0c1f821b80>
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/asyncio/base_events.py", line 654, in __del__
+NameError: name 'ResourceWarning' is not defined
+Exception ignored in: <function Local.__del__ at 0x7f0c1f7990d0>
+Traceback (most recent call last):
+  File "/instantInsight/venv/lib/python3.8/site-packages/asgiref/local.py", line 94, in __del__
+NameError: name 'TypeError' is not defined
+[Mon Feb 06 16:15:42.079904 2023] [wsgi:error] [pid 2839682:tid 140685340100352] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Mon Feb 06 16:15:42.079962 2023] [wsgi:error] [pid 2839682:tid 140685340100352] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Mon Feb 06 16:15:42.079965 2023] [wsgi:error] [pid 2839682:tid 140685340100352]   import numpy
+[Mon Feb 06 16:15:43.084952 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] d==>
+[Mon Feb 06 16:15:43.085016 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:43.085031 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 1
+[Mon Feb 06 16:15:43.085044 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:43.085057 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] Copy(2)
+[Mon Feb 06 16:15:43.085071 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.201448 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 10 di
+[Mon Feb 06 16:15:43.201483 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:43.201492 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 67a41e30-a6
+[Mon Feb 06 16:15:43.201500 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.202296 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] cuurent time==>
+[Mon Feb 06 16:15:43.202441 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:43.202450 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 16:15:43
+[Mon Feb 06 16:15:43.202457 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.311478 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 67a41
+[Mon Feb 06 16:15:43.311514 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.406116 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] pbkdf2_sha256$260000$TJoH8fPpfIUdnfnShnnzyO$CiLhcL6f4APwmOrekCV+H0lQJGE79oYQ16LkSziYzm0=
+[Mon Feb 06 16:15:43.406167 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.496122 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] True
+[Mon Feb 06 16:15:43.496175 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.919297 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] /instantInsight/django/server/panelengagement/views.py:239: GuessedAtParserWarning: No parser was explicitly specified, so I'm using the best available HTML parser for this system ("html.parser"). This usually isn't a problem, but if you run this code on another system, or in a different virtual environment, it may use a different parser and behave differently.
+[Mon Feb 06 16:15:43.919361 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.919366 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] The code that caused this warning is on line 239 of the file /instantInsight/django/server/panelengagement/views.py. To get rid of this warning, pass the additional argument 'features="html.parser"' to the BeautifulSoup constructor.
+[Mon Feb 06 16:15:43.919371 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.919374 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]   soup = BeautifulSoup(email_body, 'html')
+[Mon Feb 06 16:15:43.936316 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] datetime_object==>
+[Mon Feb 06 16:15:43.936356 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:43.936367 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 2023-02-06 16:17:00
+[Mon Feb 06 16:15:43.936375 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:43.958174 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] coming to excute
+[Mon Feb 06 16:15:43.958223 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:44.034163 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] print job
+[Mon Feb 06 16:15:44.034230 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:44.034299 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] prompt (trigger: date[2023-02-06 16:17:00 IST], pending)
+[Mon Feb 06 16:15:44.034317 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:44.064332 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] coming to excute
+[Mon Feb 06 16:15:44.064396 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 
+[Mon Feb 06 16:15:44.064831 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] print job
+[Mon Feb 06 16:15:44.064855 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548]  
+[Mon Feb 06 16:15:44.064910 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] prompt (trigger: date[2023-02-06 16:17:00 IST], pending)
+[Mon Feb 06 16:15:44.064924 2023] [wsgi:error] [pid 2839682:tid 140685340100352] [remote 49.37.249.102:49548] 

@@ -1,0 +1,51 @@
+[Thu Nov 24 13:11:51.837426 2022] [wsgi:error] [pid 1675935:tid 140322765510400] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Thu Nov 24 13:11:51.838100 2022] [wsgi:error] [pid 1675935:tid 140322765510400] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Thu Nov 24 13:11:51.838109 2022] [wsgi:error] [pid 1675935:tid 140322765510400]   import numpy
+[Thu Nov 24 13:11:52.344406 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] cuurent time==>
+[Thu Nov 24 13:11:52.344464 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312]  
+[Thu Nov 24 13:11:52.344485 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] <class 'str'>
+[Thu Nov 24 13:11:52.344501 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:11:52.750957 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 76697
+[Thu Nov 24 13:11:52.750993 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:11:52.836342 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] pbkdf2_sha256$260000$OcOzrgkLa2LOEzgSx2TasZ$qxnBQgKtwjOoq331KtTaOpiBtMwiREdRFfJ2tSquFUo=
+[Thu Nov 24 13:11:52.836392 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:11:52.925006 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] True
+[Thu Nov 24 13:11:52.925058 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:11:53.100043 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 10281
+[Thu Nov 24 13:11:53.100091 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:11:53.120560 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] pid==>
+[Thu Nov 24 13:11:53.120627 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312]  
+[Thu Nov 24 13:11:53.120640 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 75
+[Thu Nov 24 13:11:53.120648 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312]  
+[Thu Nov 24 13:11:53.120658 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 10281
+[Thu Nov 24 13:11:53.120666 2022] [wsgi:error] [pid 1675935:tid 140322765510400] [remote 103.104.223.119:58312] 
+[Thu Nov 24 13:12:22.835606 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] list of ints
+[Thu Nov 24 13:12:22.835671 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.835689 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 10281
+[Thu Nov 24 13:12:22.835702 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.835742 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] request.session['vid'] ==>
+[Thu Nov 24 13:12:22.835757 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.835834 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] False
+[Thu Nov 24 13:12:22.835852 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.835875 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] request.session['offer_url']==>
+[Thu Nov 24 13:12:22.835889 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.835934 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] https://instantinsightz.com/pid=75&mid=6ba7b8149dad11d180b400c04fd430c85bfdb5564dd34f0ea59bf69958811ca1e524c9f0741a40678d3d7b27b32b872d&uid=Rb46V0eB
+[Thu Nov 24 13:12:22.835948 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.837924 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] total seconds==>
+[Thu Nov 24 13:12:22.837946 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.837958 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 29.0
+[Thu Nov 24 13:12:22.837966 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.837986 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] complted
+[Thu Nov 24 13:12:22.837996 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.849186 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] sample_obj
+[Thu Nov 24 13:12:22.849227 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.849252 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] {'id': 28, 'name': 'Final Test Sample', 'complete': '10', 'bonus_points': '200', 'is_custom_panel': None, 'quotas_id': 2, 'project_id': 75}
+[Thu Nov 24 13:12:22.849264 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.857677 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] session url=>https://instantinsightz.com/pid=75&mid=6ba7b8149dad11d180b400c04fd430c85bfdb5564dd34f0ea59bf69958811ca1e524c9f0741a40678d3d7b27b32b872d&uid=Rb46V0eB
+[Thu Nov 24 13:12:22.857731 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]  
+[Thu Nov 24 13:12:22.857750 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 10281
+[Thu Nov 24 13:12:22.857764 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.857793 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] url=>https://instantinsightz.com/pid=75&mid=6ba7b8149dad11d180b400c04fd430c85bfdb5564dd34f0ea59bf69958811ca1e524c9f0741a40678d3d7b27b32b872d&uid=10281
+[Thu Nov 24 13:12:22.857807 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] 
+[Thu Nov 24 13:12:22.860836 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327] /instantInsight/venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1416: RuntimeWarning: DateTimeField UserSurveyOffers.attened_date_time received a naive datetime (2022-11-24 13:12:22.858830) while time zone support is active.
+[Thu Nov 24 13:12:22.860868 2022] [wsgi:error] [pid 1675935:tid 140322757117696] [remote 103.104.223.119:58327]   warnings.warn("DateTimeField %s received a naive datetime (%s)"
