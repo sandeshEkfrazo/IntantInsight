@@ -8,10 +8,11 @@ from panelengagement.serializers import *
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.views import APIView
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
 import csv
 from django.http import HttpResponse
 import time, datetime
+from datetime import timedelta
 from projects.pagination import MyPagination
 from rest_framework.generics import GenericAPIView, ListAPIView, ListCreateAPIView
 from django.conf import settings
@@ -23,12 +24,14 @@ from django.core.mail import EmailMessage, send_mail
 from usersurvey.models import *
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
+import json
 from account.backends_ import *
+from django_celery_beat.models import CrontabSchedule, PeriodicTask, ClockedSchedule, IntervalSchedule
 
 @method_decorator([authorization_required], name='dispatch')
 class PeCampaignListApiView(ListAPIView):
     serializer_class = PeCampaignSerializer
-    queryset = PeCampaign.objects.all()
+    queryset = PeCampaign.objects.all().order_by('-id')
     # pagination_class = MyPagination
 
 @method_decorator([authorization_required], name='dispatch')
@@ -98,11 +101,51 @@ class AllPageApiView(ListAPIView):
 #             return Response({'result': {'message': 'PeCategory deleted successfully'}})
 #         return Response({'result': {'error': 'PeCategory id not found to delete'}}, status=status.HTTP_404_NOT_FOUND)
 
+class ISDeleteORstore(APIView):
+    def post(self, request):
+        data = request.data
+        
+        PeCampaign.objects.filter(id=data['campaign_id']).update(is_deleted=data['is_deleted_or_restored'])
+
+        today = datetime.datetime.today()
+        after_90_days = today + timedelta(days=89)
+
+        if data['is_deleted_or_restored']:   #true
+
+            clocked_obj = ClockedSchedule.objects.create(
+                    clocked_time = after_90_days 
+            )
+            task_start = PeriodicTask.objects.create(name="DeletePeCampaignAutoAfter90Days"+str(clocked_obj.id), task="panelengagement.tasks.deletePeCampaign",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'pe_campaign_id': data['campaign_id']}))
+
+            return Response({'result': 'Campaign Deleted successfully'})
+        else:
+            cloked_id = PeriodicTask.objects.get(kwargs=json.dumps({'pe_campaign_id': data['campaign_id']})).clocked_id
+            ClockedSchedule.objects.filter(id=cloked_id).delete()
+
+            return Response({'result': 'Campaign Restored successfully'})
+
+        return Response({'result': 'success'})
+
 @method_decorator([authorization_required], name='dispatch')
 class PeCampaignView(GenericAPIView):
     def get(self, request, pk):
         if PeCampaign.objects.filter(id=pk).exists():
-            val = PeCampaign.objects.filter(id=pk).values()
+            val = PeCampaign.objects.filter(id=pk).values(
+                "market",
+                "campaign_name",
+                "points",
+                "status",
+                "profile_type",
+                "external_profile_link",
+                "internal_campaign_generated_link",
+                "pe_category",
+                "pe_campaign_type_id",
+                "created_date",
+                "updated_dateTime",
+                "created_by",
+                "updated_by",
+                "is_deleted",
+            )
             return Response({'result': {'pe_campaign': val}})
         return Response({'result': {'error': 'Not Found'}})
     
@@ -117,9 +160,14 @@ class PeCampaignView(GenericAPIView):
         profile_type = data['profile_type']
         external_profile_link = data['external_profile_link']
         question_library_id = data.get('question_library_id')
+        created_by = data['created_by']
+        updated_by = data['updated_by']
+
+        if PeCampaign.objects.filter(campaign_name=campaign_name).exists():
+            return Response({'result': "Campaign name already taken"}, status=HTTP_400_BAD_REQUEST)
 
         if PeCampaignType.objects.filter(id=pe_campaign_type_id).exists():
-            pe_campaign = PeCampaign.objects.create(market=market ,campaign_name=campaign_name ,points=points ,status=status ,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link)
+            pe_campaign = PeCampaign.objects.create(market=market ,campaign_name=campaign_name ,points=points ,status=status ,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link, created_by_id=created_by ,updated_by_id=updated_by)
 
             # if question_library_id is not None: 
             #     for questions in question_library_id:
@@ -151,11 +199,17 @@ class PeCampaignView(GenericAPIView):
         pe_campaign_type_id = data['pe_campaign_type_id']
         profile_type = data['profile_type']
         external_profile_link = data['external_profile_link']
-        
+        updated_by = data['updated_by']
+
+
+        if PeCampaign.objects.filter(~Q(id=pk) & Q(campaign_name=campaign_name)).exists():
+            return Response({'result': "Campaign name already taken"}, status=HTTP_400_BAD_REQUEST)
+
+
         # if PeCategory.objects.filter(id=pe_category_id).exists():
         if PeCampaignType.objects.filter(id=pe_campaign_type_id).exists():
             if PeCampaign.objects.filter(id=pk).exists():
-                PeCampaign.objects.filter(id=pk).update(market=market ,campaign_name=campaign_name ,points=points ,status=status,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link)
+                PeCampaign.objects.filter(id=pk).update(market=market ,campaign_name=campaign_name ,points=points ,status=status,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link, updated_by_id=updated_by)
                 return Response({'result': {'pe_campaign_id': pk}, 'message': 'pe-campaign updated successfully'})
             return Response({'result': {'error': 'no pe-campaign found'}}, status=HTTP_404_NOT_FOUND)      
         return Response({'result': {'error': 'no pe-campaign type found'}}, status=HTTP_404_NOT_FOUND)    
@@ -241,13 +295,24 @@ class EmailSendOut(APIView):
 
         clss_link_val = soup.find("a", class_="link_value")
 
+        panelist_first_name = soup.find("span", class_="FirstName")
+        panelist_last_name = soup.find("span", class_="LastName")
+        surveyTime = soup.find("span", class_="Time")
+        points = soup.find("span", class_="Points")
+
         # print("emails==>>>ksalkd==>>",UserSurvey.objects.filter(email__in=emails).values('id'))
 
 
 
         if shedule is None:
             for i in emails:
-                panelist_id = UserSurvey.objects.get(email=i).id
+                panelist_obj = UserSurvey.objects.get(email=i)
+                panelist_id = panelist_obj.id
+
+                panelist_first_name.string.replace_with(panelist_obj.first_name)
+                panelist_last_name.string.replace_with(panelist_obj.last_name)
+                # surveyTime.string.replace_with(PeCampaign.objects.filter(id=pe_campaign_id).last().actual_survey_length)
+                points.string.replace_with(PeCampaign.objects.filter(id=pe_campaign_id).last().points)
 
                 # encrypted_uid = encrypt(str(panelist_id),iv)
                 encoded_user_id = hashids.encode(int(panelist_id))
@@ -853,19 +918,19 @@ class CreatPage(APIView):
 
         if campaign_id is not None:
             if Page.objects.filter(Q(name=name)&Q(campaign_id=campaign_id)).exists():
-                return Response({'error': {'message': 'name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'error': {'message': 'Page name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
             else:
                 res = Page.objects.create(name=name, campaign_id=campaign_id)
 
         if pe_campaign_id is not None:
             if Page.objects.filter(Q(name=name)&Q(pe_campaign_id=pe_campaign_id)).exists():
-                return Response({'error': {'message': 'name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'error': {'message': 'Page name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
             else:
                 res = Page.objects.create(name=name, pe_campaign_id=pe_campaign_id)
 
         if prescreener_id is not None:
             if Page.objects.filter(Q(name=name)&Q(prescreener_id=prescreener_id)).exists():
-                return Response({'error': {'message': 'name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'error': {'message': 'Page name aleady exist'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
             else:
                 res = Page.objects.create(name=name, prescreener_id=prescreener_id)
         
@@ -873,17 +938,40 @@ class CreatPage(APIView):
 
 @method_decorator([authorization_required], name='dispatch')
 class PageRoutingLogicApiView(GenericAPIView):
+    def get(self, request):
+        
+        if request.query_params['campaign_id'] != "null":
+            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        if request.query_params['pe_campaign_id'] != "null":
+            return Response('pe_campaign id')
+        
+        if request.query_params['prescreener_id'] != "null":
+            return Response('prescreener id')
+
+        if request.query_params['routing_logic_id'] != "null":
+            # return Response('page_id')
+            data = PageRoutingLogic.objects.filter(id=request.query_params['routing_logic_id']).values()
+            return Response({'data': data})
+
+        return Response('nothing id')
+
     def post(self, request):
         data=request.data
 
-        name='RoutingLogic'
+        name = data['name']
         page_id = data['page_id']
         logic = data['logic']
         targeted_page = data['targeted_page']
         targeted_page_name = data['targeted_page_name']
 
+        campaign_id = data['campaign_id']
+        prescreener_id = data['prescreener_id']
+        pe_campaign_id = data['pe_campaign_id']
+
         if Page.objects.filter(id=page_id).exists():
-            res = PageRoutingLogic.objects.create(name=name, page_id=page_id, logic=logic, targeted_page=targeted_page, targeted_page_name=targeted_page_name)
+            res = PageRoutingLogic.objects.create(name=name, page_id=page_id, logic=logic, targeted_page=targeted_page, targeted_page_name=targeted_page_name, pe_campaign_id=pe_campaign_id ,campaign_id=campaign_id,prescreener_id=prescreener_id)
             return Response({'result':{'message': 'routing logic created successfully'}})
         return Response({'error': {'message': 'page id does not exist'}}, status=status.HTTP_404_NOT_FOUND)
 

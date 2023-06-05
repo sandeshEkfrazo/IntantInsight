@@ -1,0 +1,17 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=trends
+Group=www-data
+WorkingDirectory=/trends_dir
+ExecStart=/trends_dir/trendsvenv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          trends.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

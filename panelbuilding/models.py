@@ -41,6 +41,8 @@ class Campaign(models.Model):
     ########## end-styling #######
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name="created_by")
     updated_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name="updated_by")
+    p_created_date_time = models.DateTimeField(editable=True, null=True, blank=True)
+    p_updated_date_time = models.DateTimeField(editable=True,  null=True, blank=True)
 
 
     is_deleted = models.BooleanField(default=False, null=True, blank=True)

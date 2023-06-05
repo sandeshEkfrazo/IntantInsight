@@ -93,13 +93,22 @@ class ExternalSamplePanelistAnswer(models.Model):
 class DuplicateorFraudPanelistID(models.Model):
     panelist_id = models.CharField(max_length=200, null=True,blank=True)
     project_id = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=100, null=True, blank=True)
+    IE = models.CharField(max_length=100, null=True, blank=True)
+    campaign_id = models.IntegerField(null=True, blank=True)
+    survey_start_time = models.TextField(null=True, blank=True)
+    survey_end_time = models.TextField(null=True, blank=True)
+    browser = models.TextField(null=True, blank=True)
+    os = models.TextField(null=True, blank=True)
+    ip_adress = models.TextField(null=True, blank=True)
+    user_country = models.TextField(null=True, blank=True)
+    client_id = models.TextField(null=True, blank=True)
+
     supplier_id = models.CharField(max_length=100, null=True, blank=True)
     supplier_name = models.CharField(max_length=100, null=True, blank=True)
-    status = models.CharField(max_length=100, null=True, blank=True)
     threat_potential = models.CharField(max_length=100, null=True, blank=True)
     threat_potential_score = models.CharField(max_length=100, null=True, blank=True)
     duplicate_score = models.CharField(max_length=100, null=True, blank=True)
 
 class BuildQueryOpearator(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
-

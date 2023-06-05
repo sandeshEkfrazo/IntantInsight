@@ -46,9 +46,53 @@ class ProjectSerializer(serializers.ModelSerializer):
     enable_rd = EnableRdSerializer(read_only=True)
     created_by = serializers.StringRelatedField()
     updated_by = serializers.StringRelatedField()
+    project_type = serializers.StringRelatedField()
+    # total_complete = serializers.IntegerField()
     class Meta:
         model = Project
-        fields = '__all__'
+        # fields = '__all__'
+        fields = [
+            'id',
+            "project_type_id",
+            "enable_rd",
+            "project_type",
+            "sampling",
+            "requirement_form",
+            "name",
+            "incentive_cost",
+            "cpi",
+            "total_complete",
+            "remove_targeted_audience",
+            "bidding_manager",
+            "study_type",
+            "length_of_interview",
+            "status",
+            "market_type",
+            "country",
+            "bidding_id",
+            "device_compatibility",
+            "enable_geo_location",
+            "requires_webcam",
+            "collects_pii",
+            "estimated_incidence_rate_percentage",
+            "project_manager",
+            "company",
+            "client",
+            "project_type",
+            "service",
+            "currency",
+            "start_date",
+            "end_date",
+            "quotas_details",
+            "created_date",
+            "updated_dateTime",
+            "copy",
+            "created_by",
+            "updated_by",
+            "is_deleted",
+            "quotas",
+
+        ]
 
 class ExternalSamplingSerializer(serializers.ModelSerializer):
     project = serializers.StringRelatedField(many=False, read_only=True)

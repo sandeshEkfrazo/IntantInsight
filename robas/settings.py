@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'django_filters',
+    'celery',
     'django_celery_results',
     'django_celery_beat',
     'import_export',
@@ -98,12 +99,12 @@ WSGI_APPLICATION = 'robas.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # DATABASES = {
 #     'default': {
@@ -115,16 +116,16 @@ DATABASES = {
 # }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'robas',
-#         'USER':'root',
-#         'PASSWORD':'',
-#         'HOST':'127.0.0.1',
-#         'PORT':'3307',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'robas',
+        'USER':'root',
+        'PASSWORD':'',
+        'HOST':'127.0.0.1',
+        'PORT':'3307',
+    }
+}
 
 
 
@@ -183,13 +184,8 @@ MEDIA_URL = '/media/'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-# --------------------------------------
 EMAIL_HOST_USER = 'donotreplyrobas@gmail.com'
 EMAIL_HOST_PASSWORD = 'ugkcwzivtlojlpai'
-# EMAIL_HOST_PASSWORD = Robas@123#
-
-# -----------------------------------
-
 # EMAIL_HOST_USER = 'research@buzz-thepanel.com'
 # EMAIL_HOST_PASSWORD = 'Robas@12#'
 EMAIL_PORT = 587
@@ -240,14 +236,12 @@ JWT = {
 # CELERY_RESULT_SERIALIZER = 'json'
 # CELERY_TASK_SERIALIZER = 'json'
 
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-# CELERY_RESULT_BACKEND ='redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND ='django-db'
-CELERY_ACCET_CONTENT = ['application/json']
-CELERY_RESULT_SERIALIZER ='json'
-CELERY_TASK_SERIALIZER ='json'
-CELERY_TIMEZONE ='Asia/Kolkata'
-CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_ACCEPT_CONTENT = ['application/json']
 
 # IMPORT_EXPORT_USE_TRANSACTIONS = True
 STATIC_ROOT="/instantInsight/site/public/static"
@@ -256,7 +250,3 @@ MEDIA_ROOT="instantInsight/site/public/media"
 STATICFILES_DIRS = [
         '/instantInsight/site/public/static/frontend/dist'
 ]  
-
-
-captcha_site_key = "6LcHWUkjAAAAAGk_HUNTDamxvTBWGmt1PaMEGbC9"
-captcha_secret_key = "6LcHWUkjAAAAAK-gE01XGuGdBZhH_r4dc-nQQQCf"

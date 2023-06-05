@@ -77,7 +77,7 @@ class Client(admin.ModelAdmin):
 
 @admin.register(Supplier)
 class Supplier(admin.ModelAdmin):
-    list_display = ['id', 'Supplier_Name' ,'Contact_Person' ,'Methodology' ,'Email' ,'Billing_Email' ,'Website' ,'Phone' ,'Status' ,'Total_Projects' ,'Total_Completes' ,'Avg_Vendor_Rating' ,'Payment_Term' ,'MSA' ,'NDA' ,'GDPR' ,'Vendor_Remarks' ,'Avg_CPC' ,'Audience', 'is_for_project']
+    list_display = ['id', 'Supplier_Name' ,'Contact_Person' ,'Methodology', 'other_value' ,'Email' ,'Billing_Email' ,'Website' ,'Phone' ,'Status' ,'Total_Projects' ,'Total_Completes' ,'Avg_Vendor_Rating' ,'Payment_Term' ,'MSA' ,'NDA' ,'GDPR' ,'Vendor_Remarks' ,'Avg_CPC' ,'Audience', 'is_for_project', 'created_date_time', 'updated_date_time']
 
 @admin.register(EmailTemplate)
 class EmailTemplate(admin.ModelAdmin):
@@ -98,5 +98,4 @@ class SupplierMaskedLink(admin.ModelAdmin):
 
 @admin.register(IESamplingStatus)
 class IESamplingStatus(admin.ModelAdmin):
-    list_display = ['id', 'user_id','project' ,'project_id', 'status', 'IE', 'campaign_id', 'survey_start_time', 'survey_end_time', 'browser', 'os', 'ip_adress', 'user_country', 'supplier', 'client_id', 'vendor_tid']
-
+    list_display = ['id', 'user_id','project' ,'project_id', 'status', 'IE', 'campaign_id', 'survey_start_time', 'survey_end_time', 'browser', 'os', 'ip_adress', 'user_country', 'supplier', 'client_id', 'vendor_tid', 'duplicate_score', 'threat_potential_score']

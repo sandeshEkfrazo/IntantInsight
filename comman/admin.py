@@ -18,7 +18,7 @@ class CustomizeThankyouandTerminatePage(admin.ModelAdmin):
 
 @admin.register(PageRoutingLogic)
 class PageRoutingLogic(admin.ModelAdmin):
-    list_display = ['id', 'name', 'page', 'logic', 'targeted_page', 'targeted_page_name']
+    list_display = ['id', 'name', 'page', 'logic', 'targeted_page', 'targeted_page_name', 'pe_campaign', 'campaign_id', 'prescreener']
 
 @admin.register(PageMaskingLogic)
 class Logics(admin.ModelAdmin):

@@ -61,5 +61,9 @@ urlpatterns = [
 
    path('get-all-panelist_email', getAllPanelistEmail.as_view()),
 
+   path('export-or-clone-campaign', ExportOrCloneCampaign.as_view()),
+
+   path('check-link', CheckLink.as_view()),
+
    path('', include(router.urls))
 ]

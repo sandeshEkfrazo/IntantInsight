@@ -19,10 +19,11 @@ class CampaignSerializer(serializers.ModelSerializer):
     market_type = serializers.StringRelatedField()
     created_by = serializers.StringRelatedField()
     updated_by = serializers.StringRelatedField()
+    cpa = serializers.FloatField()
     class Meta:
         model = Campaign
         fields = ['id','market_type', 'market_type_id' ,'campaign_name' ,'lead_required' ,'start_date' ,'length_of_interview' ,'is_quality_follow_up' ,'description' ,'is_relevantld_check' ,'cpa' ,'end_data' ,'recruitment_type' ,'campaign_link' , 'surveyTemplate_link','token' ,'status' ,'company_id', 'company' ,'campaign_type' ,'commision_model', 'live_survey_link_for_custom_panel_builidng', 'created_by', 'updated_by',
-        'live_survey_link_for_custom_panel_builidng','background_color','camapign_image', 'camapign_logo', 'text_color', 'campaign_title', 'is_deleted']
+        'live_survey_link_for_custom_panel_builidng','background_color','camapign_image', 'camapign_logo', 'text_color', 'campaign_title', 'is_deleted', 'p_created_date_time', 'p_updated_date_time']
 
 class VendorSerializer(serializers.ModelSerializer):
     class Meta:

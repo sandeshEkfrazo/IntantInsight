@@ -47,8 +47,7 @@ import jwt
 
 
 # print(make_password('1234'))
-# print("hello")
-# print(check_password('Ptest1@123','pbkdf2_sha256$260000$M9sRjHtFhpImo1twO9XHnE$ev+ntYTSnQSphAr8LZEUXPrsIYdEMjC8lea0Lrg7dvI='))
+# print(check_password('1234','pbkdf2_sha256$260000$x4LuTvjrgmyQE7JaZnP3sZ$Dkmf78TGidy51SL8HhbeRqNcMicydK5F/xGdz7tx5UE='))
 
 # ?-------------------------  JWT LOG-IN-------------------------------------------------------------------------------
 
@@ -369,7 +368,7 @@ class UserRegister(APIView):
             user_obj = UserAccess.objects.filter(user_id=request.query_params['id']).values('user_id', 'user__username','user__first_name','user__last_name','user__email','user__phone_number', 'access')
             return Response({'result': user_obj})
         else:
-            value = CustomUser.objects.all().values('id', 'username', 'role__role_name', 'email', 'phone_number', )
+            value = CustomUser.objects.all().order_by('username').values('id', 'username', 'role__role_name', 'email', 'phone_number', )
             return Response({'result': {'users': value}})
 
     def post(self, request):
@@ -446,6 +445,8 @@ class UserRegister(APIView):
             else:
                 pass
             return Response({'message': {"user updated successfully"}})
+        else:
+            return Response({'message': 'user with this email does not exists'})
 
     
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  User Login   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -463,7 +464,7 @@ class UserLogin(generics.ListCreateAPIView):
             company_id = user.company_id
             data = check_password(password, user.password)
         if user and data:
-                print("========================",str(settings.SECRET_KEY))
+                print("========================",str(settings.JWT_SECRET_KEY))
                 auth_token = jwt.encode({'user_id': user.id, 'name': user.username, 'exp': datetime.utcnow() + timedelta(days=5)}, str(settings.JWT_SECRET_KEY), algorithm="HS256")
                 authorization = auth_token
                 print(authorization)
@@ -487,7 +488,7 @@ class AddUsers(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all()
 
     def get(self, request):  
-        value = CustomUser.objects.all().values()
+        value = CustomUser.objects.all().order_by('username').values()
         return Response({'Result': {'Users': value}})
 
     def post(self, request):
@@ -582,6 +583,7 @@ class forgotPassword(GenericAPIView):
             return Response({'result': {'message': 'we have sent you the mail, please check your mail'}})
         return Response({'error': {'message': 'email not found'}}, status=HTTP_404_NOT_FOUND)
 
+# print(check_password("123","pbkdf2_sha256$260000$CRtWjgiSUZ1MFtW8vDYiId$/Eyi9eI5gR0rWTkyyonKaFPfCJ5NQXy5ZWvMv8e8GHY="))     
 
 class resetPassword(GenericAPIView):
     def post(self, request):
@@ -670,7 +672,6 @@ class RoleAccessControlView(APIView):
 
 
     
-
 
 
 

@@ -12,6 +12,9 @@ class ProjectType(models.Model):
     last_update_timestamp  = models.DateTimeField(auto_now_add=True,verbose_name="Create_TimeStamp",blank=True,null=True)
     company = models.CharField(max_length=100, null=True, blank=True)
 
+    def __str__(self):
+        return self.name
+
 class Category(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     detail = models.CharField(max_length=100, null=True, blank=True)

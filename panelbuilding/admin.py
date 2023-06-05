@@ -3,7 +3,7 @@ from .models import *
 
 @admin.register(Campaign)
 class Campaign(admin.ModelAdmin):
-    list_display = ['id','market_type' ,'campaign_name' ,'lead_required' ,'start_date' ,'length_of_interview' ,'is_quality_follow_up' ,'description' ,'is_relevantld_check' ,'cpa' ,'end_data' ,'recruitment_type' ,'campaign_link' , 'surveyTemplate_link','token' ,'status' ,'company_id' ,'campaign_type' ,'commision_model', 'live_survey_link_for_custom_panel_builidng', 'background_color', 'camapign_image', 'camapign_logo', 'campaign_title', 'text_color', 'created_by', 'updated_by', 'is_deleted']
+    list_display = ['id','market_type' ,'campaign_name' ,'lead_required' ,'start_date' ,'length_of_interview' ,'is_quality_follow_up' ,'description' ,'is_relevantld_check' ,'cpa' ,'end_data' ,'recruitment_type' ,'campaign_link' , 'surveyTemplate_link','token' ,'status' ,'company_id' ,'campaign_type' ,'commision_model', 'live_survey_link_for_custom_panel_builidng', 'background_color', 'camapign_image', 'camapign_logo', 'campaign_title', 'text_color', 'created_by', 'updated_by', 'is_deleted', 'p_created_date_time', 'p_updated_date_time']
 
 @admin.register(SupplierCampaignLink)
 class SupplierCampaignLink(admin.ModelAdmin):

@@ -116,6 +116,9 @@ class Questionlibrary(GenericAPIView):
         question_cat = data.get('question_category')
         is_base_question = data['is_base_question']
 
+        if QuestionLibrary.objects.filter(question_name=question_name, question_type_id=question_type, question_category_id=question_cat).exists():
+            return Response({'message': 'Question Already Exist in the System'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         question = QuestionLibrary.objects.create(language=language, question_name=question_name, question_text=question_text, instruction=instruction, question_type_id=question_type, question_category_id=question_cat, is_base_question=is_base_question)
         
         if data['question_choice'] is not None:
@@ -230,7 +233,7 @@ class PrescreenerDetailView(APIView):
         
 
     def put(self, request, pk):
-        data = request.data
+        data = rePrescreenerPageApiViewquest.data
         name = data.get('name')
         link = data.get('link')
         enable_otp_verification = data.get('enable_otp_verification')

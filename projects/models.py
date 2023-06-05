@@ -38,8 +38,8 @@ class Project(models.Model):
     created_date = models.DateField(blank=True, null=True, editable=True)
     updated_dateTime = models.DateTimeField(null=True, blank=True, editable=True)
     copy = models.CharField(max_length=150, blank=True, null=True)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name="project_created_by")
-    updated_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name="project_updated_by")
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="project_created_by")
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="project_updated_by")
     
     is_deleted = models.BooleanField(default=False, null=True, blank=True)
 
@@ -67,7 +67,7 @@ class RequirementForm(models.Model):
     test_survey_link = models.URLField(null=True, blank=True)
     masked_url_with_unique_id = models.TextField(null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requirement_form',null=True, blank=True)
-    de_dupe_project = models.ForeignKey(Project, on_delete=models.CASCADE,null=True, blank=True)
+    de_dupe_project = models.ForeignKey(Project, on_delete=models.CASCADE,null=True, blank=True, related_name='de_dupe_project')
 
 class Template(models.Model):
     name               = models.CharField(max_length=100, blank=True, null=True)
@@ -90,6 +90,8 @@ class Supplier(models.Model):
     Supplier_Name = models.CharField(max_length=150, blank=True, null=True)
     Contact_Person = models.CharField(max_length=150, blank=True, null=True)
     Methodology = models.CharField(max_length=150, blank=True, null=True)
+    # other_methodology = models.CharField(max_length=150, blank=True, null=True),
+    other_value = models.CharField(max_length=100, blank=True, null=True)
     Email = models.EmailField(verbose_name="email",max_length=150, blank=True, null=True)
     Billing_Email = models.CharField(max_length=150, blank=True, null=True)
     Website = models.CharField(max_length=150, blank=True, null=True)
@@ -105,7 +107,9 @@ class Supplier(models.Model):
     Vendor_Remarks = models.CharField(max_length=150, blank=True, null=True)
     Avg_CPC = models.CharField(max_length=150, blank=True, null=True)
     Audience =  models.CharField(max_length=150, blank=True, null=True)
-    is_for_project =models.BooleanField(default=False)
+    is_for_project =models.BooleanField(default=False, null=True, blank=True)
+    created_date_time = models.DateTimeField(editable=True, null=True, blank=True)
+    updated_date_time = models.DateTimeField(editable=True,  null=True, blank=True)
 
     def __str__(self):
         return self.Supplier_Name
@@ -158,6 +162,9 @@ class IESamplingStatus(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
     client_id = models.TextField(null=True, blank=True)
     vendor_tid = models.TextField(null=True, blank=True)
+
+    duplicate_score = models.CharField(max_length=200, null=True, blank=True)
+    threat_potential_score = models.CharField(max_length=200, null=True, blank=True)
 
 class ProjectDashboard(models.Model):
     response_rate = models.CharField(max_length=100, null=True, blank=True)

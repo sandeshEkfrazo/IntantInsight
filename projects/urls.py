@@ -3,6 +3,7 @@ from projects import views
 from projects.views import *
 from rest_framework.routers import DefaultRouter
 
+
 router = DefaultRouter()
 router.register('projects', ProjecttView, basename='ProjecttView')
 
@@ -39,5 +40,10 @@ urlpatterns = [
     path('project-date-filter', ProjectDateFilter.as_view()),
     path('remove-user-points', RemoveUserPointsByExcelUploads.as_view()),
     path('export-fraud-ids', ExportDuplicateIDsForProject.as_view()),
+
+    path('sendMail-celery', SendEmailThroughCelelry.as_view()),
+
+    path('get-rd-response-from-client', GetRDResponse.as_view()),
+
     path('', include(router.urls)),
 ]

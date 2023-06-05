@@ -6,6 +6,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('delete-or-restore-pe-campaign', ISDeleteORstore.as_view()),
+    
     path('all-pe-campaigns', PeCampaignListApiView.as_view(), name='pe_campaign'),
     path('all-redemption', RedemptionListApiView.as_view(), name='redemption'),
     path('all-page', AllPageApiView.as_view(), name='all_page'),

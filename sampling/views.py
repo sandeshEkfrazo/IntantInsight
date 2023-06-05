@@ -12,6 +12,7 @@ from account.backends_ import *
 from projects.pagination import MyPagination
 from projects.models import Country, Project
 from rest_framework import *
+from django.db.models import Q
 
 # Create your views here.
 @method_decorator([authorization_required], name='dispatch')
@@ -73,6 +74,9 @@ class SamplingAPIView(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
     def update(self, request, *args, **kwargs):
+        if Sampling.objects.filter(~Q(id=kwargs['pk']) & Q(name = request.data['name'])).exists():
+            return Response({'error': 'sample name already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
         if Sampling.objects.filter(id=kwargs['pk']).exists():
             sample_obj = Sampling.objects.get(id=kwargs['pk'])
             serializer = SamplingSerializer(sample_obj, data=request.data, partial=True)

@@ -184,7 +184,7 @@ class CountryApiView(APIView):
             all_values = Country.objects.filter(id=request.query_params.get('id')).values()
             return Response({"result": all_values})
         else:
-            all_values = Country.objects.all().values()
+            all_values = Country.objects.all().order_by('name').values()
             return Response({"result": all_values})
 
     def post(self, request):
@@ -296,7 +296,7 @@ class ClientApiView(APIView):
             all_values = Client.objects.filter(id=pk).values()
             return Response({"result": all_values})
         else:
-            all_values = Client.objects.all().values()
+            all_values = Client.objects.all().order_by('clientname').values()
             return Response({"result": all_values})
 
     def post(self, request):
@@ -432,7 +432,7 @@ class PeCampaignTypeView(APIView):
             all_values = PeCampaignType.objects.filter(id=request.query_params.get('id')).values()
             return Response({"result": all_values})
         else:
-            all_values = PeCampaignType.objects.all().values()
+            all_values = PeCampaignType.objects.all().order_by('name').values()
             return Response({"result": all_values})
 
     def post(self, request):

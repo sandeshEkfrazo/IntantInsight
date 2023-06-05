@@ -4,6 +4,8 @@ from prescreener.models import *
 from prescreener.models import *
 from panelbuilding.models import *
 from masters.models import *
+from account.models import *
+
 
 # class PeCampaignType(models.Model):
 #     name = models.CharField(max_length=100, null=True, blank=True)
@@ -18,7 +20,7 @@ from masters.models import *
 #         return self.name
 
 class PeCampaign(models.Model):
-    market = models.CharField(max_length=100, null=True, blank=True)
+    market = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
     campaign_name = models.CharField(max_length=100, null=True, blank=True)
     points = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=100, null=True, blank=True)
@@ -29,6 +31,9 @@ class PeCampaign(models.Model):
     pe_campaign_type = models.ForeignKey(PeCampaignType, on_delete=models.CASCADE, null=True, blank=True, related_name="pe_campaign_type")
     created_date = models.DateField(blank=True, null=True, editable=True, auto_now_add=True)
     updated_dateTime = models.DateTimeField(null=True, blank=True, editable=True, auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="pe_campaign_created_by")
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="pe_campaign_updated_by")
+    is_deleted = models.BooleanField(default=False)
 
 class Redemption(models.Model):
     market = models.CharField(max_length=100 ,null=True, blank=True)

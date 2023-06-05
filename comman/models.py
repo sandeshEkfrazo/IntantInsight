@@ -23,6 +23,11 @@ class PageRoutingLogic(models.Model):
     targeted_page = models.CharField(max_length=100, null=True, blank=True)
     targeted_page_name = models.CharField(max_length=100, null=True, blank=True)
 
+
+    pe_campaign = models.ForeignKey(PeCampaign, on_delete=models.CASCADE, null=True, blank=True)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, null=True, blank=True)
+    prescreener = models.ForeignKey(Prescreener, on_delete=models.CASCADE, null=True, blank=True)
+
 class PageMaskingLogic(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     page = models.ForeignKey(Page,on_delete=models.CASCADE, null=True, blank=True)

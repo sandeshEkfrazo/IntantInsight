@@ -11,7 +11,7 @@ class PeCategory(admin.ModelAdmin):
 
 @admin.register(PeCampaign)
 class PeCampaign(admin.ModelAdmin):
-    list_display = ['id', 'market' ,'campaign_name' ,'points' ,'status' ,'pe_category' ,'pe_campaign_type' ,'profile_type' ,'external_profile_link', 'internal_campaign_generated_link', 'created_date','updated_dateTime']
+    list_display = ['id', 'market' ,'campaign_name' ,'points' ,'status' ,'pe_category' ,'pe_campaign_type' ,'profile_type' ,'external_profile_link', 'internal_campaign_generated_link', 'created_date','updated_dateTime', 'created_by', 'updated_by', 'is_deleted']
 
 @admin.register(Redemption)
 class Redemption(admin.ModelAdmin):

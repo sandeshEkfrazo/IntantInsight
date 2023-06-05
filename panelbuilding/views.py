@@ -6,6 +6,7 @@ from datetime import date, datetime
 from django.db.models.aggregates import Count
 from django.db.models.expressions import Case
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.http.response import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from rest_framework import generics, serializers
@@ -39,6 +40,7 @@ from account.models import Company
 from bs4 import BeautifulSoup
 from django.contrib.auth.hashers import make_password, check_password
 
+
 from surveyQuestionare.models import *
 from django.core.exceptions import *
 from itertools import groupby
@@ -54,6 +56,9 @@ from robas.encrdecrp import decrypt
 from django.utils.decorators import method_decorator
 from account.backends_ import *
 import pandas as pd
+import csv
+from hashids import Hashids
+from datetime import timedelta
 
 # Create your views here.
 
@@ -125,7 +130,56 @@ class DeleteOrRestoreCampaign(APIView):
 
         Campaign.objects.filter(id=campaign_id).update(is_deleted=is_delete_or_restore_campaign)
 
+
+        today = datetime.datetime.today()
+        after_90_days = today + timedelta(days=89)
+
+
+        if is_delete_or_restore_campaign:
+            clocked_obj = ClockedSchedule.objects.create(
+                    clocked_time = after_90_days 
+            )
+            task_start = PeriodicTask.objects.create(name="DeleteCampaignAutoAfter90Days"+str(clocked_obj.id), task="panelbuilding.tasks.deleteCampaign",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'campaign_id': campaign_id}))
+        else:
+            cloked_id = PeriodicTask.objects.get(kwargs=json.dumps({'campaign_id': campaign_id})).clocked_id
+            ClockedSchedule.objects.filter(id=cloked_id).delete()
+
         return Response({'message': 'camapign is deleted updated successfully'})
+
+
+class ExportOrCloneCampaign(APIView):
+    def post(self, request):
+        data = request.data
+
+        if data['is_export']:
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+
+            writer = csv.writer(response)
+
+            writer.writerow(['Campaign Id', 'First name', 'Last name', 'Email', 'Status', 'DOB', 'Gender','Vendor Id', 'Date of Joining', 'City', 'State', 'Country', 'Age'])
+
+            obj = UserSurvey.objects.filter(campaign_id=data['campaign_id']).values_list('campaign_id', 'first_name', 'last_name', 'email', 'status', 'dob', 'gender', 'supplier_id', 'date_of_joining','city', 'state', 'country', 'age')
+            for i in obj:
+                writer.writerow(i)
+            response['Content-Disposition'] = 'attachment; filename="campaign.xls"'
+            return response
+
+        else:
+            obj = Campaign.objects.get(id=data['campaign_id'])
+            obj.id = None
+            obj.campaign_name = obj.campaign_name + " Copy"
+            obj.save()
+            print("obj", obj.campaign_name)
+
+            campaign_link = "https://instantinsightz.com/c/cid="+str(obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
+            # survey_template_link = "https://robas.thestorywallcafe.com/surveyTemplate?cid="+str(campaign_obj.id) # cid = campaign_id
+            survey_template_link = "https://instantinsightz.com/campaign-login/cid="+str(obj.id)
+
+            print("campaign Obj", obj.id)
+
+            Campaign.objects.filter(id=obj.id).update(campaign_link=campaign_link, surveyTemplate_link=survey_template_link)
+
+            return Response({'message': "camapaign cloned successfully"})
 
 # @method_decorator([authorization_required], name='dispatch')
 class CampaignView(viewsets.ModelViewSet):
@@ -136,7 +190,7 @@ class CampaignView(viewsets.ModelViewSet):
             campaign_obj = Campaign.objects.filter(status=self.request.query_params['id'])
             return campaign_obj
         else:
-            allval = Campaign.objects.all()
+            allval = Campaign.objects.all().order_by('-id')
             return allval
 
     def retrieve(self, request, *args, **kwargs):
@@ -152,8 +206,8 @@ class CampaignView(viewsets.ModelViewSet):
     def create(self, request):
         serializer = CampaignSerializer(data=request.data)
 
-        if  Campaign.objects.filter(campaign_name=request.data['campaign_name']).exists():
-            return Response({'error': 'campaign name already taken '}, status=status.HTTP_400_BAD_REQUEST)
+        if Campaign.objects.filter(campaign_name=request.data['campaign_name']).exists():
+            return Response({'error': 'Campaign Name Already Exists '}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             if serializer.is_valid():
@@ -175,7 +229,9 @@ class CampaignView(viewsets.ModelViewSet):
                     commision_model_id = request.data['commision_model'],
                     live_survey_link_for_custom_panel_builidng = request.data['live_link'],
                     created_by_id = request.data['user_id'],
-                    updated_by_id = request.data['user_id']
+                    updated_by_id = request.data['user_id'],
+                    p_created_date_time = datetime.datetime.now(),
+                    status = "Draft"
                 )
 
                 if request.data['customised_campaign_template'] is not None:
@@ -213,7 +269,7 @@ class CampaignView(viewsets.ModelViewSet):
 
                 if request.data['campaign_type'] == 2:
                     GeneratedPixcelCodeForCustomPanelBuilding.objects.create(
-                        s2s_postback_pixel_code = "https://instantinsightz.com/"+str(campaign_obj.id)+"&mid="+str(uuid.uuid1())[:5]+"&tid=<#tid#>", 
+                        s2s_postback_pixel_code = "https://instantinsightz.com/cid="+str(campaign_obj.id)+"&mid="+str(uuid.uuid1())[:5]+"&tid=<#tid#>", 
                         pixel_code_screen = "",
                         google_pixel_code = "",
                         facebook_pixel_code = "",
@@ -231,6 +287,10 @@ class CampaignView(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         pixcels = {}
+
+        if Campaign.objects.filter(~Q(id=kwargs['pk']) & Q(campaign_name=request.data['campaign_name'])).exists():
+            return Response({'error': 'Campaign Name Already Exists '}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             project_obj = Campaign.objects.get(id=kwargs['pk'])
             serializer = CampaignSerializer(project_obj, data=request.data, partial=True)
@@ -253,7 +313,8 @@ class CampaignView(viewsets.ModelViewSet):
                 campaign_type_id = request.data['campaign_type'],
                 commision_model_id = request.data['commision_model'],
                 live_survey_link_for_custom_panel_builidng = request.data['live_link'],
-                updated_by_id = request.data['user_id']
+                updated_by_id = request.data['user_id'],
+                p_updated_date_time = datetime.datetime.now()
                 )
 
 
@@ -347,47 +408,126 @@ class getCampaignDashBoard(APIView):
         serializer = CampaignDashboardSerializer(allVal, many=True)
         return Response({'data': serializer.data, 'campaign_name': campaign_name})
 
+
+# hashidss = Hashids(min_length=10)
+# print("hashids = =>", hashidss)
+
+# hashed_cid = hashidss.decode(str("shdh"))
+# print("hashed_cid==>", hashed_cid)
+
+
+from comman.getCountryDeatails import *
+
+
+class CheckLink(APIView):
+    def get(self, request):
+        cid = request.query_params['cid']
+        sid = request.query_params['sid']
+        tid = request.query_params['tid']
+
+        print("cid.isdigit()==>", cid.isdigit())
+
+        if not cid.isdigit():
+            return Response({'url':"invalid"})
+        if not sid.isdigit():
+            # return HttpResponse('{"Error": "Invalid"}') 
+            return Response({'url':"invalid"})
+
+        if Campaign.objects.filter(id=cid).exists():
+            if Supplier.objects.filter(id=sid).exists():
+            
+                return Response({'url':"campaign?cid="+str(cid)+"&sid="+str(sid)+"&tid="+tid})
+
+            # return HttpResponse('{"Error": "Invalid Supplier id"}')
+            return Response({'url':"invalid"})
+        # return HttpResponse('{"Error":"Invalid Campaign id"}')
+        return Response({'url':"invalid"})
+
+
 class CamapignLinkWithTransactionID(APIView):
     def get(self, request, cid, sid, tid):
         print("printing here line")
-        TransactionIds.objects.create(transaction_id=tid, supplier_id=sid, campaign_id=cid)
 
-        total_clicks_count = TransactionIds.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid)).count()
-        print("total_clicks_count ==>", total_clicks_count)
-        # total_clicks_count = CampaignDashboard.objects.get(campaign_id=cid).total_clicks
-        # print("total_clicks_count2==>>", total_clicks_count)
-        # total_clicks_count = 0
+        ip_address = ""
 
-        if UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "SOI")).exists():
-            soi = UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "SOI")).count()
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+            ip_address = str(ip)
         else:
-            soi = 0
-        if UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "DOI")).exists():
-            doi = UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "DOI")).count()
-        else:
-            doi = 0
+            ip = request.META.get('REMOTE_ADDR')
+            ip_address = str(ip)
 
-        cpa = Campaign.objects.get(id=cid).cpa
-        total_spent = (doi * int(cpa))
+        getCountryOfUser = getCountry(ip_address)
+        print("getCountryOfUser==>>>***", getCountryOfUser)
 
-        print("cpa=", cpa , "doi=", doi, "total_spent=", total_spent)
+        hashids = Hashids(min_length=8)
 
-        conversion_rate = (doi + total_clicks_count) / 100
+        hashed_cid = hashids.decode(str(cid))
+        hashed_sid = hashids.decode(str(sid))
 
-        if( CampaignDashboard.objects.filter(Q(campaign_id=cid) & Q( supplier_id=sid)).exists()):
-            CampaignDashboard.objects.filter(Q(campaign_id=cid) & Q( supplier_id=sid)).update(total_clicks = total_clicks_count, total_soi=soi, total_doi=doi, total_conversion_rate=conversion_rate, total_spent=total_spent, supplier_id=sid)
-        else:
-            CampaignDashboard.objects.create(total_clicks = total_clicks_count, total_soi=soi, campaign_id=cid, supplier_id=sid, total_doi=doi, total_conversion_rate=conversion_rate, total_spent=total_spent)
+        print("hashed_cid==>", hashed_cid)
+
+        # have to encrypt the camapaign is and suppier id
+
+        # descrypted_cid = list(hashed_cid)[0]
+        # descrypted_sid = list(hashed_sid)[0]
+
+        # print("decryted sid and cid ==> ",descrypted_cid, descrypted_sid)
         
+        # if type(sid)!= int and type(cid)!= int:
+        #     return HttpResponse('{"Error":"Invalid"}')
 
-        print("all campaign==>",Campaign.objects.all().values())  
+        if not cid.isdigit():
+            return HttpResponse('{"Error": "Invalid"}') 
+        if not sid.isdigit():
+            return HttpResponse('{"Error": "Invalid"}') 
 
-        if Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng is not None:
-            print("Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng==>", Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng)
-            
-            return redirect(Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng)
-        else:
-            return redirect("https://instantinsightz.com/campaign?cid="+str(cid)+"&sid="+str(sid)+"&tid="+tid)
+
+        if Campaign.objects.filter(id=cid).exists():
+            if Supplier.objects.filter(id=sid).exists():
+                TransactionIds.objects.create(transaction_id=tid, supplier_id=sid, campaign_id=cid)
+
+                total_clicks_count = TransactionIds.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid)).count()
+                print("total_clicks_count ==>", total_clicks_count)
+                # total_clicks_count = CampaignDashboard.objects.get(campaign_id=cid).total_clicks
+                # print("total_clicks_count2==>>", total_clicks_count)
+                # total_clicks_count = 0
+
+                if UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "SOI")).exists():
+                    soi = UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "SOI")).count()
+                else:
+                    soi = 0
+                if UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "DOI")).exists():
+                    doi = UserSurvey.objects.filter(Q(campaign_id=cid) & Q(supplier_id=sid) & Q(status = "DOI")).count()
+                else:
+                    doi = 0
+
+                cpa = Campaign.objects.get(id=cid).cpa
+                total_spent = (doi * int(cpa))
+
+                # print("cpa=", cpa , "doi=", doi, "total_spent=", total_spent)
+
+                conversion_rate = (doi + total_clicks_count) / 100
+
+                if( CampaignDashboard.objects.filter(Q(campaign_id=cid) & Q( supplier_id=sid)).exists()):
+                    CampaignDashboard.objects.filter(Q(campaign_id=cid) & Q( supplier_id=sid)).update(total_clicks = total_clicks_count, total_soi=soi, total_doi=doi, total_conversion_rate=conversion_rate, total_spent=total_spent, supplier_id=sid)
+                else:
+                    CampaignDashboard.objects.create(total_clicks = total_clicks_count, total_soi=soi, campaign_id=cid, supplier_id=sid, total_doi=doi, total_conversion_rate=conversion_rate, total_spent=total_spent)
+                
+
+                # print("all campaign==>",Campaign.objects.all().values())  
+
+                if Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng is not None:
+                    # print("Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng==>", Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng)
+                    
+                    return redirect(Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng)
+                else:
+                    return redirect("https://instantinsightz.com/campaign?cid="+str(cid)+"&sid="+str(sid)+"&tid="+tid)
+                    # return redirect("https://instantinsightz.com/campaign?cid="+str(descrypted_cid)+"&sid="+str(descrypted_sid)+"&tid="+tid)
+                    
+            return HttpResponse('{"Error": "Invalid Supplier id"}')
+        return HttpResponse('{"Error":"Invalid Campaign id"}')
        
 class CampaignRoutingLogicQuestions(GenericAPIView):
     def get(self, request, pk, p_id):  #send campaign_id in id and page_id in pk
@@ -903,7 +1043,6 @@ ps = make_password("10259")
 print(ps)
 print(check_password("10259", ps))
 
-from hashids import Hashids
 
 class SendOut(APIView):
     def post(self, request):
@@ -930,6 +1069,11 @@ class SendOut(APIView):
         clss = soup.find("a", class_="targetPage")
 
         clss_link_val = soup.find("a", class_="link_value")
+
+        panelist_first_name = soup.find("span", class_="FirstName")
+        panelist_last_name = soup.find("span", class_="LastName")
+        surveyTime = soup.find("span", class_="Time")
+        points = soup.find("span", class_="Points")
 
         print("==>> clas values", clss_link_val)
 
@@ -958,16 +1102,26 @@ class SendOut(APIView):
                 return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
             else:
                 for i in emails:
-                    panelist_id = UserSurvey.objects.get(email=i).id
+                    panelist_obj = UserSurvey.objects.get(email=i)
 
+                    panelist_first_name.string.replace_with(panelist_obj.first_name)
+                    panelist_last_name.string.replace_with(panelist_obj.last_name)
+                    surveyTime.string.replace_with(RequirementForm.objects.filter(project_id=project_id).last().actual_survey_length)
+                    points.string.replace_with(Sampling.objects.filter(project_id=project_id).last().bonus_points)
+
+                    panelist_id = panelist_obj.id
                     encoded_user_id = hashids.encode(int(panelist_id))
 
                     print("panelist id",panelist_id)
                     
 
                     # clss_link_val['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encrypted_uid.decode("utf-8", "ignore"))
-                    clss['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id)
-                    clss_link_val.append(RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid=<#user_id#>")
+
+                    # clss['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id)
+                    # clss_link_val.append(RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid=<#user_id#>")
+
+                    clss['href'] = RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)
+                    clss_link_val.append(RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid=<#user_id#>")
 
                     em_body = soup.prettify()
                     # send_email_task.delay(emails, sender, email_body, subject)                
@@ -975,17 +1129,17 @@ class SendOut(APIView):
                     email.content_subtype = "html"
                     email.send(fail_silently=False)  
 
-                    if UserSurveyOffers.objects.filter(user_survey_id=panelist_id, offer_link=RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id)).exists():
+                    if UserSurveyOffers.objects.filter(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)).exists():
                         pass
                     else:
-                        UserSurveyOffers.objects.create(user_survey_id=panelist_id, offer_link=RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id), survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
+                        UserSurveyOffers.objects.create(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id), survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
                     
 
                     if ProjectDashboard.objects.filter(project_id=project_id, ie='internal').exists():
                         total_invite_sent = ProjectDashboard.objects.get(project_id=project_id, ie='internal').total_invite_sent
                         ProjectDashboard.objects.filter(project_id=project_id, ie='internal').update(total_invite_sent=int(total_invite_sent)+len(emails), total_clicks=0)
                     else:
-                        ProjectDashboard.objects.create(project_id=project_id, total_invite_sent=len(emails), total_clicks=0)
+                        ProjectDashboard.objects.create(project_id=project_id, total_invite_sent=len(emails), total_clicks=0, ie='internal')
 
             user_survey_obj = UserSurvey.objects.filter(email__in=emails).values()
             # print("list==>>",list(user_survey_obj))
@@ -1017,38 +1171,45 @@ class SendOut(APIView):
                 tempArr.append(tempDict)
                 tempDict = {}
 
-            print("tempArr==>>",tempArr)
+            return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
 
 
         # print(query)
         if shedule is not None:
+            if custom_sample == True:
+                for j in data['panelist_offer_links']:
+                    clss_link_val.append(j['Offer link'])
 
-            selected_email = random.sample(emails, int(data['max_reminder_sent']))
-            print("lenght of selected emaisl", len(selected_email))
+                    encoded_user_id = hashids.encode(int(j['Panelist id']))
 
-            string = shedule['date']+" "+ shedule['time']
-            date = datetime.datetime.strptime(string, "%d-%m-%Y  %H:%M:%S")
-            print(date)
-            # print (date)
+                    custom_offer_link = j['Offer link'].replace("<#id#>", str(encoded_user_id))
+                    clss['href'] = custom_offer_link
 
-            year = date.year
-            month = date.month
-            day = date.day
-            hour = date.hour
-            minute = date.minute
-            second = date.second
+                    print("class link==>", clss_link_val)
 
-            timezone.now()
-            date_time = datetime.datetime(year, month, day, hour, minute, second)
-            print(date_time)
+                    print("scheduled datetime==>", shedule['datetime']) 
+
+                    clocked_obj = ClockedSchedule.objects.create(
+                        clocked_time = shedule['datetime']
+                    )
+
+                    if UserSurveyOffers.objects.filter(Q(user_survey_id=j['Panelist id']) & Q(offer_link=custom_offer_link)).exists():
+                        pass
+                    else:
+                        UserSurveyOffers.objects.create(user_survey_id=j['Panelist id'], offer_link=custom_offer_link, survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
+                return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
             
-            interval =  IntervalSchedule.objects.create(every=3, period='days')
-            print(interval.id)
+            else:
+                print("else scheduled datetime==>", shedule['datetime']) 
 
-            task = PeriodicTask.objects.create(start_time=date_time, name="sending_email_to_paelist"+str(interval.id), task="robas.task.send_email_task", args=json.dumps([emails, sender, email_body, subject]), interval_id=interval.id)
+                clocked_obj = ClockedSchedule.objects.create(
+                    clocked_time = shedule['datetime']
+                )
+                
+                task_start = PeriodicTask.objects.create(name="schduleSendout"+str(clocked_obj.id), task="panelbuilding.tasks.ScheduleSendout",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'emails': emails, 'sender': sender, 'email_body': email_body, 'subject': subject, 'project_id': project_id, 'project_name': project_obj.name, 'project_end_date': str(project_obj.end_date), 'bonus_points': sample_obj['bonus_points']}))
 
-            # print(schedule)
-        return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
+                return Response({'result': {'count': 'mail has been scheduled successfully'}})
+
 
 
 
@@ -1069,7 +1230,8 @@ class PanelistPrescreenerAnswer(APIView):
             # print(list(ints)[0])
         
         if PrescreenerSurvey.objects.filter(panelist_id=descrypted_uid).exists():
-            return Response({'error': {'message': 'sorry you have already attended this survey'}}, status=HTTP_406_NOT_ACCEPTABLE)
+            # return Response({'error': {'message': 'sorry you have already attended this survey'}}, status=HTTP_406_NOT_ACCEPTABLE)
+            return Response("/already-attended-survey", status=HTTP_406_NOT_ACCEPTABLE)
         else:
             PrescreenerSurvey.objects.create(panelist_id=descrypted_uid, prescreener_id=prescreener_id)
             for i in answered_question:
@@ -1293,7 +1455,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__date_of_joining=answer[0]), #is eqaul
+                3 : Q(user_survey__date_of_joining=answer[0]), #is equal
                 4 : ~Q(user_survey__date_of_joining=answer[0]), #is not equal
                 5 : Q(user_survey__date_of_joining__in=answer[0]), #in list
                 6 : ~Q(user_survey__date_of_joining__in=answer[0]), #not in list
@@ -1319,7 +1481,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__date_of_joining=answer[0]), #is eqaul
+                3 : Q(user_survey__date_of_joining=answer[0]), #is equal
                 4 : ~Q(user_survey__date_of_joining=answer[0]), #is not equal
                 5 : Q(user_survey__date_of_joining__in=answer[0]), #in list
                 6 : ~Q(user_survey__date_of_joining__in=answer[0]), #not in list
@@ -1339,7 +1501,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__age__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__age__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__age__exact=answer[0]), #is not equal
                 5 : Q(user_survey__age__in=answer[0]), #in list
                 6 : ~Q(user_survey__age__in=answer[0]), #not in list
@@ -1359,7 +1521,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__city__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__city__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__city__exact=answer[0]), #is not equal
                 5 : Q(user_survey__city__in=answer[0]), #in list
                 6 : ~Q(user_survey__city__in=answer[0]), #not in list
@@ -1379,7 +1541,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__email__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__email__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__email__exact=answer[0]), #is not equal
                 5 : Q(user_survey__email__in=answer[0]), #in list
                 6 : ~Q(user_survey__email__in=answer[0]), #not in list
@@ -1399,7 +1561,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__gender__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__gender__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__gender__exact=answer[0]), #is not equal
                 5 : Q(user_survey__gender__in=answer[0]), #in list
                 6 : ~Q(user_survey__gender__in=answer[0]), #not in list
@@ -1419,7 +1581,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__state__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__state__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__state__exact=answer[0]), #is not equal
                 5 : Q(user_survey__state__in=answer[0]), #in list
                 6 : ~Q(user_survey__state__in=answer[0]), #not in list
@@ -1439,7 +1601,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
             switcher = {
                 # 1 : Q(question_library_id=question_id),  #is fill
                 # 2 : ~Q(question_library_id=question_id),  #is not filled
-                3 : Q(user_survey__country__exact=answer[0]), #is eqaul
+                3 : Q(user_survey__country__exact=answer[0]), #is equal
                 4 : ~Q(user_survey__country__exact=answer[0]), #is not equal
                 5 : Q(user_survey__country__in=answer[0]), #in list
                 6 : ~Q(user_survey__country__in=answer[0]), #not in list
@@ -1459,7 +1621,7 @@ def Q_object_creater(self, question_id, operator_id, answer, format_type):
         switcher = {
                     1 : Q(question_library_id=question_id),  #is fill
                     2 : ~Q(question_library_id=question_id),  #is not filled
-                    3 : Q(answers__iexact=answer) & Q(question_library_id=question_id), #is eqaul
+                    3 : Q(answers__iexact=answer) & Q(question_library_id=question_id), #is equal
                     4 : ~Q(answers__iexact=answer) & Q(question_library_id=question_id), #is not equal
                     5 : Q(answers__in=answer) & Q(question_library_id=question_id), #in list
                     6 : ~Q(answers__in=answer) & Q(question_library_id=question_id), #not in list
@@ -1581,7 +1743,7 @@ class SelectQuestionForBuildCriteria(GenericAPIView):
             answrs = []
             all_choice = {}
 
-            if questions_type == 'Plan Text':
+            if questions_type == 'Plain Text':
                 # print("plain text here==>>", questions_type)
                 answer_obj = Answer.objects.filter(question_library_id=question_id).values()
                 # print("answer_obj==>", list(answer_obj))
@@ -1635,7 +1797,7 @@ def questionType(self, data):
         'Multiple Select': [all_list[0], all_list[1], all_list[6], all_list[7]],
         'Check Box': [all_list[0], all_list[1], all_list[6], all_list[7]],
         'Multiple Choice': [all_list[0], all_list[1], all_list[4], all_list[5], all_list[6], all_list[7]],
-        'Plan Text': [all_list[2], all_list[3], all_list[12], all_list[13], all_list[16]],
+        'Plain Text': [all_list[2], all_list[3], all_list[12], all_list[13], all_list[16]],
         'Radio Button': [all_list[0], all_list[1], all_list[4], all_list[5], all_list[2], all_list[3]],
         'Date': [all_list[2], all_list[3] ,all_list[10], all_list[11], all_list[14], all_list[15],  all_list[16]],
     }
@@ -2298,4 +2460,5 @@ class UploadCustomSample(APIView):
 
         
         return Response({'result': {'count': len(email_list), 'requested_data':email_list, 'dict_obj': dict_obj}})
+
 
