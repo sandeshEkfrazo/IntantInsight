@@ -194,12 +194,12 @@ class PrescreenerApiView(generics.ListCreateAPIView):
 
         r1 = random.randint(10, 100000)
         unique_id = str(r1)
-        # generated_link = "https://robas.thestorywallcafe.com/#/prescreener_id="+str(unique_id)
-        # generated_link = "https://robas.thestorywallcafe.com/prescreening?uid=<#id#>"
-        generated_link = "https://robas.thestorywallcafe.com/surveyTemplate?uid=<#id#>"
+        # generated_link = settings.LIVE_URL+"/#/prescreener_id="+str(unique_id)
+        # generated_link = settings.LIVE_URL+"/prescreening?uid=<#id#>"
+        generated_link = settings.LIVE_URL+"/surveyTemplate?uid=<#id#>"
 
         data = Prescreener.objects.create(name=name, link=link, enable_otp_verification=enable_otp_verification, project=project) 
-        generated_link = "https://instantinsightz.com/surveyTemplate?uid=<#id#>&screening_id="+str(data.id)
+        generated_link = settings.LIVE_URL+"/surveyTemplate?uid=<#id#>&screening_id="+str(data.id)
         Prescreener.objects.filter(id=data.id).update(generated_link=generated_link)
         print(data.id)        
 
@@ -417,7 +417,6 @@ class ImportQuestionAndChoices(APIView):
 from tablib import Dataset
 import itertools
 
-@method_decorator([authorization_required], name='dispatch')
 def getDuplicatesWithInfo(listOfElems):
     ''' Get duplicate element in a list along with thier indices in list
      and frequency count'''
@@ -458,8 +457,10 @@ class readCampaignExcelData(APIView):
         questioncatList = []
 
 
-        newdataframe = pd.read_csv("/instantInsight/site/public/media/modified.csv" , usecols=['question_id','question_name', 'option_id', 'question_choice', 'question_type','question_category'])
+        newdataframe = pd.read_csv("/robas/site/public/media/modified.csv" , usecols=['question_id','question_name', 'option_id', 'question_choice', 'question_type','question_category'])
         # newdataframe = pd.read_csv("modified.csv" , usecols=['question_id','question_name', 'option_id', 'question_choice', 'question_type','question_category'])  locally
+
+        print("newdataframe==>", newdataframe)
 
         for new in newdataframe['question_category']:
             questioncatList.append(new)
@@ -507,7 +508,7 @@ class readCampaignExcelData(APIView):
         
         panelDat = []
         
-        with open("/instantInsight/site/public/media/datasheet.csv" , 'r') as read_obj:
+        with open("/robas/site/public/media/datasheet.csv" , 'r') as read_obj:
         # with open("datasheet.csv" , 'r') as read_obj:    locally
             # csv_dict_reader = csv.reader(read_obj)  
             csv_dict_reader = csv.DictReader(read_obj)

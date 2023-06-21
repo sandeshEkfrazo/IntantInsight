@@ -36,4 +36,6 @@ urlpatterns = [
     path('pe-campaign-type/<int:pk>', PeCampaignTypeView.as_view()),
     path('pe-category', PeCategoryView.as_view()),
     path('pe-category/<int:pk>', PeCategoryView.as_view()),
+
+    path('import-client-csv', ImportCSVClient.as_view())
 ]

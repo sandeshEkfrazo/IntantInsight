@@ -25,7 +25,7 @@ class PanelistForgotPasswordAPI(APIView):
 
         full_name = user_obj.first_name + user_obj.last_name
 
-        link = "https://instantinsightz.com/panelist-reset-password/"+str(user_obj.id)
+        link = settings.LIVE_URL+"/panelist-reset-password/"+str(user_obj.id)
         html_path = 'panelist_forgot_password.html'
         context_data = {'link': link, 'name': full_name}
         email_html_template = get_template(html_path).render(context_data)

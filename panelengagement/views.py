@@ -177,7 +177,7 @@ class PeCampaignView(GenericAPIView):
             #         else:
             #             return Response({'error': {'message': 'question ids not found'}})
 
-            generated_campaign_live_link = "https://instantinsightz.com/pcid="+str(pe_campaign.id)
+            generated_campaign_live_link = settings.LIVE_URL+"/pcid="+str(pe_campaign.id)
                 # generated_campaign_live_link = "localhost:8000/pcid="+str(pe_campaign.id)
 
             PeCampaign.objects.filter(id=pe_campaign.id).update(internal_campaign_generated_link=generated_campaign_live_link)
@@ -367,19 +367,19 @@ class pecampaignMaskedLink(APIView):
         r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud=170716409&sy_nr=20210575&rt_cy_ce=us&rt_sr_pd='+str(uid))
         print("josn data=====>>",r.json())
         if r.json()['Surveys'][0]['duplicate_score'] == 100 and r.json()['Surveys'][0]['duplicate_potential'] == 'high':
-            return HttpResponseRedirect("https://instantinsightz.com/survey-terminated")
+            return HttpResponseRedirect(settings.LIVE_URL+"/survey-terminated")
 
         hashids = Hashids(min_length=8)
         ints = hashids.decode(str(uid))
         descrypted_uid = list(ints)[0]
         print(list(ints)[0])
 
-        request.session['pe-campaign-offer-url'] = "https://instantinsightz.com/pcid="+str(pcid)+"&uid="+str(uid)
+        request.session['pe-campaign-offer-url'] = settings.LIVE_URL+"/pcid="+str(pcid)+"&uid="+str(uid)
 
         if PeCampaignSurvey.objects.filter(panelist_id=descrypted_uid, pecampaign_id=pcid).exists():
-            return HttpResponseRedirect("https://instantInsightz.com/already-attended-survey")
+            return HttpResponseRedirect(settings.LIVE_URL+"/already-attended-survey")
         else:
-            return redirect('https://instantinsightz.com/surveyTemplate?uid='+str(uid)+'&pcid='+str(pcid))
+            return redirect(settings.LIVE_URL+'/surveyTemplate?uid='+str(uid)+'&pcid='+str(pcid))
 
 @method_decorator([authorization_required], name='dispatch')
 class RedemptionView(GenericAPIView):
@@ -390,7 +390,7 @@ class RedemptionView(GenericAPIView):
 
             urls = str(Redemption.objects.get(id=pk).image)
             
-            image_url = 'https://robas.thestorywallcafe.com/media'+urls
+            image_url = settings.LIVE_URL+'/media'+urls
             img_base64 = base64.b64encode(requests.get(image_url).content)
 
 
@@ -940,15 +940,35 @@ class CreatPage(APIView):
 class PageRoutingLogicApiView(GenericAPIView):
     def get(self, request):
         
-        if request.query_params['campaign_id'] != "null":
+        # if request.query_params['campaign_id'] != "null":
+        if request.GET.get('campaign_id'):
             data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
             return Response({'data': data})
 
-        if request.query_params['pe_campaign_id'] != "null":
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
             return Response('pe_campaign id')
         
-        if request.query_params['prescreener_id'] != "null":
-            return Response('prescreener id')
+        # if request.query_params['prescreener_id'] != "null":
+        if request.GET.get('prescreener_id'):
+            data = PageRoutingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id']).values()
+
+            for i in data:
+                for j in i['logic']['dataset']:
+                    option_name = QuestionChoice.objects.get(id=j['answer']).name
+                    question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                    operator_name = QuestionOperator.objects.get(id=j['operator_id']).name
+
+                    j['answer_name'] = option_name
+                    j['question_name'] = question_name
+                    j['operator_name'] = operator_name
+
+
+                    
+                    # QuestionLibrary
+                    # QuestionChoice
+                    # QuestionOperator
+            return Response({'data': data})
 
         if request.query_params['routing_logic_id'] != "null":
             # return Response('page_id')
@@ -975,39 +995,163 @@ class PageRoutingLogicApiView(GenericAPIView):
             return Response({'result':{'message': 'routing logic created successfully'}})
         return Response({'error': {'message': 'page id does not exist'}}, status=status.HTTP_404_NOT_FOUND)
 
+    def delete(self, request):
+        routing_logic_id = request.GET.get('routing_logic_id')
+
+        if request.GET.get('campaign_id'):
+            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
+            return Response('pe_campaign id')
+
+        if request.GET.get('prescreener_id'):
+            data = PageRoutingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=routing_logic_id).delete()
+            return Response({'data': "routing logic deleted successfully!"})
+
+        return Response("no") 
+
+
+
 @method_decorator([authorization_required], name='dispatch')
 class PageMaskingLogicApiView(GenericAPIView):    
+    def get(self, request):
+        
+        # if request.query_params['campaign_id'] != "null":
+        if request.GET.get('campaign_id'):
+            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
+            return Response('pe_campaign id')
+        
+        # if request.query_params['prescreener_id'] != "null":
+        if request.GET.get('prescreener_id'):
+            data = PageMaskingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id']).values()
+
+            for j in data:
+                option_name = QuestionChoice.objects.get(id=j['questio_choice_id']).name
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+
+                hide_answer_name = QuestionChoice.objects.get(id=j['hide_answer_id']).name
+                targeted_question = QuestionLibrary.objects.get(id=j['target_question_id']).question_name
+
+                j['answer_name'] = option_name
+                j['targeted_question_name'] = targeted_question
+                j['hide_answer_name'] = hide_answer_name
+                j['question_name'] = question_name
+            return Response({'data': data})
+
+        if request.query_params['routing_logic_id'] != "null":
+            # return Response('page_id')
+            data = PageRoutingLogic.objects.filter(id=request.query_params['routing_logic_id']).values()
+            return Response({'data': data})
+
+        return Response('nothing id')
+
     def post(self, request):
         data = request.data
         print(data)
 
-        name = 'MaskingLogic'
+        name = data['name']
         page_id = data['page_id']
         question_id = data['question_id']
         questio_choice_id = data['questio_choice_id']
         target_question_id = data['target_question_id']
         hide_answer_id = data['hide_answer_id']
 
+        campaign_id = data['campaign_id']
+        prescreener_id = data['prescreener_id']
+        pe_campaign_id = data['pe_campaign_id']
+
         if Page.objects.filter(id=page_id).exists():
-            res = PageMaskingLogic.objects.create(name=name ,page_id=page_id ,question_id=question_id ,questio_choice_id=questio_choice_id ,target_question_id=target_question_id ,hide_answer_id=hide_answer_id )
+            res = PageMaskingLogic.objects.create(name=name ,page_id=page_id ,question_id=question_id ,questio_choice_id=questio_choice_id ,target_question_id=target_question_id ,hide_answer_id=hide_answer_id , pe_campaign_id=pe_campaign_id ,campaign_id=campaign_id,prescreener_id=prescreener_id)
             return Response({'result':{'message': 'masking logic created successfully'}})
         return Response({'error': {'message': 'page id does not exist'}}, status=status.HTTP_404_NOT_FOUND)
+    
+    def delete(self, request):
+        masking_logic_id = request.GET.get('masking_logic_id')
+
+        if request.GET.get('campaign_id'):
+            data = PageMaskingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
+            return Response('pe_campaign id')
+
+        if request.GET.get('prescreener_id'):
+            data = PageMaskingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=masking_logic_id).delete()
+            return Response({'data': "masking logic deleted successfully!"})
+
+        return Response("no") 
 
 @method_decorator([authorization_required], name='dispatch')
 class PagePipingLogicApiView(GenericAPIView):  
+    def get(self, request):
+        
+        # if request.query_params['campaign_id'] != "null":
+        if request.GET.get('campaign_id'):
+            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
+            return Response('pe_campaign id')
+        
+        # if request.query_params['prescreener_id'] != "null":
+        if request.GET.get('prescreener_id'):
+            data = PagePipingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id']).values()
+
+            for j in data:
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                j['question_name'] = question_name
+            return Response({'data': data})
+
+        if request.query_params['routing_logic_id'] != "null":
+            # return Response('page_id')
+            data = PageRoutingLogic.objects.filter(id=request.query_params['routing_logic_id']).values()
+            return Response({'data': data})
+
+        return Response('nothing id')
+
     def post(self, request):
         data = request.data
 
-        name= 'PipingLogic'
+        name= data['name']
         page_id= data['page_id']
         question_id= data['question_id']
         next_question_id= data['next_question_id']
         piped_question_text= data['piped_question_text']
 
+        campaign_id = data['campaign_id']
+        prescreener_id = data['prescreener_id']
+        pe_campaign_id = data['pe_campaign_id']
+
         if Page.objects.filter(id=page_id).exists():
-            res = PagePipingLogic.objects.create(name=name, page_id=page_id, question_id=question_id, next_question_id=next_question_id, next_question_text=piped_question_text)
+            res = PagePipingLogic.objects.create(name=name, page_id=page_id, question_id=question_id, next_question_id=next_question_id, next_question_text=piped_question_text, pe_campaign_id=pe_campaign_id ,campaign_id=campaign_id,prescreener_id=prescreener_id)
             return Response({'result':{'message': 'piping logic created successfully'}})
         return Response({'error': {'message': 'page id does not exist'}}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request):
+        piping_logic_id = request.GET.get('piping_logic_id')
+
+        if request.GET.get('campaign_id'):
+            data = PagePipingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            return Response({'data': data})
+
+        # if request.query_params['pe_campaign_id'] != "null":
+        if request.GET.get('pe_campaign_id'):
+            return Response('pe_campaign id')
+
+        if request.GET.get('prescreener_id'):
+            data = PagePipingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=piping_logic_id).delete()
+            return Response({'data': "piping logic deleted successfully!"})
+
+        return Response("no")  
+
 
 @method_decorator([authorization_required], name='dispatch')
 class PeCampaignRoutingLogicQuestions(GenericAPIView):

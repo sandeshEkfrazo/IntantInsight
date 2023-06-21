@@ -1,5 +1,6 @@
 from django.contrib import admin
 from projects.models import *
+from import_export.admin import ImportExportModelAdmin
 
 # @admin.register(Service)
 # class Service(admin.ModelAdmin):
@@ -72,7 +73,7 @@ class TrackPanel(admin.ModelAdmin):
     list_display = ['id', 'user' ,'project_redirect']
 
 @admin.register(Client)
-class Client(admin.ModelAdmin):
+class Client(ImportExportModelAdmin):
     list_display = ['id', 'clientname' ,'address' ,'email' ,'website' ,'company' ,'create_timestamp' ,'last_update_timestamp']
 
 @admin.register(Supplier)

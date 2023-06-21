@@ -1,12 +1,13 @@
 from django.contrib import admin
 from panelengagement.models import *
+from import_export.admin import ImportExportModelAdmin
 
 @admin.register(PeCampaignType)
-class PeCampaignType(admin.ModelAdmin):
+class PeCampaignType(ImportExportModelAdmin):
     list_display = ['id', 'name']
 
 @admin.register(PeCategory)
-class PeCategory(admin.ModelAdmin):
+class PeCategory(ImportExportModelAdmin):
     list_display = ['id', 'name']
 
 @admin.register(PeCampaign)

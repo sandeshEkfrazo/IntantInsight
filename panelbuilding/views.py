@@ -171,9 +171,9 @@ class ExportOrCloneCampaign(APIView):
             obj.save()
             print("obj", obj.campaign_name)
 
-            campaign_link = "https://instantinsightz.com/c/cid="+str(obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
+            campaign_link = settings.LIVE_URL+"/c/cid="+str(obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
             # survey_template_link = "https://robas.thestorywallcafe.com/surveyTemplate?cid="+str(campaign_obj.id) # cid = campaign_id
-            survey_template_link = "https://instantinsightz.com/campaign-login/cid="+str(obj.id)
+            survey_template_link = settings.LIVE_URL+"/campaign-login/cid="+str(obj.id)
 
             print("campaign Obj", obj.id)
 
@@ -253,9 +253,9 @@ class CampaignView(viewsets.ModelViewSet):
                 campaign_object = Campaign.objects.get(id=campaign_obj.id)
                 serializer_data = CampaignSerializer(campaign_object)
 
-                campaign_link = "https://instantinsightz.com/c/cid="+str(campaign_obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
+                campaign_link = +settings.LIVE_URL+"/c/cid="+str(campaign_obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
                 # survey_template_link = "https://robas.thestorywallcafe.com/surveyTemplate?cid="+str(campaign_obj.id) # cid = campaign_id
-                survey_template_link = "https://instantinsightz.com/campaign-login/cid="+str(campaign_obj.id)
+                survey_template_link = settings.LIVE_URL+"/campaign-login/cid="+str(campaign_obj.id)
 
                 print("campaign Obj", campaign_obj.id)
 
@@ -269,7 +269,7 @@ class CampaignView(viewsets.ModelViewSet):
 
                 if request.data['campaign_type'] == 2:
                     GeneratedPixcelCodeForCustomPanelBuilding.objects.create(
-                        s2s_postback_pixel_code = "https://instantinsightz.com/cid="+str(campaign_obj.id)+"&mid="+str(uuid.uuid1())[:5]+"&tid=<#tid#>", 
+                        s2s_postback_pixel_code = settings.LIVE_URL+"/cid="+str(campaign_obj.id)+"&mid="+str(uuid.uuid1())[:5]+"&tid=<#tid#>", 
                         pixel_code_screen = "",
                         google_pixel_code = "",
                         facebook_pixel_code = "",
@@ -523,7 +523,7 @@ class CamapignLinkWithTransactionID(APIView):
                     
                     return redirect(Campaign.objects.get(id=cid).live_survey_link_for_custom_panel_builidng)
                 else:
-                    return redirect("https://instantinsightz.com/campaign?cid="+str(cid)+"&sid="+str(sid)+"&tid="+tid)
+                    return redirect(settings.LIVE_URL+"/campaign?cid="+str(cid)+"&sid="+str(sid)+"&tid="+tid)
                     # return redirect("https://instantinsightz.com/campaign?cid="+str(descrypted_cid)+"&sid="+str(descrypted_sid)+"&tid="+tid)
                     
             return HttpResponse('{"Error": "Invalid Supplier id"}')
@@ -788,8 +788,8 @@ class CamapaignLoginRedirectView(APIView):
             total_spent = (doi * int(cpa))
 
             CampaignDashboard.objects.filter(campaign_id=cid).update(total_doi=doi, total_soi=soi, total_spent=total_spent)
-            # return redirect("https://instantinsightz.com/campaign-login?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
-            return redirect("https://instantinsightz.com/email-verified?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
+            # return redirect(settings.LIVE_URL+"/campaign-login?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
+            return redirect(settings.LIVE_URL+"/email-verified?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
 
 
 class CampaignSubmitApi(APIView):
@@ -1044,6 +1044,7 @@ print(ps)
 print(check_password("10259", ps))
 
 
+
 class SendOut(APIView):
     def post(self, request):
         data = request.data 
@@ -1238,9 +1239,11 @@ class PanelistPrescreenerAnswer(APIView):
                 answers = str(i['option_id']).strip("[]")
                 answe = answers.replace("'", " ")
                 if len(list(ints)) == 0:
-                    answer = ExternalSamplePanelistAnswer.objects.create(panelist_id=descrypted_uid, answers=answe, question_library_id=i['question_id'])
+                    answer = ExternalSamplePanelistAnswer.objects.create(panelist_id=descrypted_uid, answers=answe, question_library_id=i['question_id'], prescreener_id=prescreener_id)
                 else:
-                    answer = Answer.objects.create(user_survey_id=descrypted_uid, answers=answe, question_library_id=i['question_id'])
+                    answer = Answer.objects.create(user_survey_id=descrypted_uid, answers=answe, question_library_id=i['question_id'], prescreener_id=prescreener_id)
+
+
                 # for j in i['option_id']:
                 #     data = PrescreenerSurvey.objects.create(panelist_id=panelist_id ,question_id=i['question_id'], option_id=j, prescreener_id=prescreener_id)
             return Response({'result': {'message': 'Thank you for your response', 'panelist_id': panelist_id}})

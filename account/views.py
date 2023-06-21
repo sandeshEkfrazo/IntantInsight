@@ -14,7 +14,7 @@ from rest_framework import views
 from rest_framework import generics
 from rest_framework.exceptions import AuthenticationFailed
 
-from account.backends_ import CheckAuthData
+# from account.backends_ import CheckAuthData
 # from numpy import add
 from .serializers import *
 from .models import *
@@ -391,7 +391,7 @@ class UserRegister(APIView):
                 random_password = "ROBAS"+str(uuid.uuid1())[:6]
                 send_mail(
                     'Password',
-                    'Your Instant Insight Username and Password Is \nlogin here https://instantinsightz.com \nusername:'+email+'\npassword:'+random_password,
+                    'Your Instant Insight Username and Password Is \nlogin here '+settings.LIVE_URL+' \nusername:'+email+'\npassword:'+random_password,
                     'donotreplyrobas@gmail.com',
                     [email],
                     fail_silently=False,
@@ -535,7 +535,7 @@ class AddUsers(generics.ListCreateAPIView):
 class changePassword(APIView):
     def post(self, request):
         print("request====",request)
-        fun =  CheckAuthData(request)
+        # fun =  CheckAuthData(request)
         print(fun.id)
 
         
@@ -569,7 +569,7 @@ class forgotPassword(GenericAPIView):
             
             # link = "https://robas.thestorywallcafe.com/#/reset-password/"+str(user_id.id)
             # link = "http://localhost:4200/reset-password/"+str(user_id.id)
-            link = "https://instantinsightz.com/reset-password/"+str(user_id.id)
+            link = settings.LIVE_URL+'/reset-password/'+str(user_id.id)
             print(link)
             
             html_path = 'forgot_password.html'

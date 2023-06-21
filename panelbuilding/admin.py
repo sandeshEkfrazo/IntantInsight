@@ -27,7 +27,7 @@ class Vendor(admin.ModelAdmin):
 
 @admin.register(PrescreenerSurvey)
 class PrescreenerSurvey(admin.ModelAdmin):
-    list_display = ['id', 'panelist_id', 'prescreener']
+    list_display = ['id', 'panelist_id', 'prescreener', 'question_id', 'option_id']
 
 @admin.register(CampaignSurvey)
 class CampaignSurvey(admin.ModelAdmin):

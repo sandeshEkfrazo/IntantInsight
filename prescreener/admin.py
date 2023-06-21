@@ -45,15 +45,15 @@ class UserSurvey(admin.ModelAdmin):
 
 @admin.register(Answer)
 class Answer(admin.ModelAdmin):
-    list_display = ['id','user_survey' ,'answers' ,'question_library']
+    list_display = ['id','user_survey' ,'answers' ,'question_library', 'prescreener_id', 'campaign_id', 'pe_campaign_id']
 
 @admin.register(ExternalSamplePanelistAnswer)
 class ExternalSamplePanelistAnswer(admin.ModelAdmin):
-    list_display = ['id','panelist_id' ,'answers' ,'question_library']
+    list_display = ['id','panelist_id' ,'answers' ,'question_library', 'prescreener_id', 'campaign_id', 'pe_campaign_id']
 
 @admin.register(DuplicateorFraudPanelistID)
 class DuplicateorFraudPanelistID(admin.ModelAdmin):
-    list_display = ['id','panelist_id', 'project_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential', 'threat_potential_score', 'duplicate_score', 'browser', 'os', 'ip_adress', 'user_country', 'survey_start_time', 'survey_end_time', 'client_id']
+    list_display = ['id','panelist_id', 'project_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential', 'threat_potential_score', 'duplicate_score', 'browser', 'os', 'ip_adress', 'user_country', 'survey_start_time', 'survey_end_time', 'client_id', 'county_mismath']
 
 @admin.register(BuildQueryOpearator)
 class BuildQueryOpearator(admin.ModelAdmin):

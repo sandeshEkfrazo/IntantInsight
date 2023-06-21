@@ -85,10 +85,19 @@ class Answer(models.Model):
     answers = models.TextField(null=True, blank=True)
     question_library=models.ForeignKey(QuestionLibrary, on_delete=models.CASCADE, null=True, blank=True, related_name='questions_library')
 
+    prescreener_id = models.IntegerField(null=True, blank=True)
+    campaign_id = models.IntegerField(null=True, blank=True)
+    pe_campaign_id = models.IntegerField(null=True, blank=True)
+
+
 class ExternalSamplePanelistAnswer(models.Model):
     panelist_id = models.CharField(max_length=200, null=True,blank=True)
     answers = models.TextField(null=True, blank=True)
     question_library=models.ForeignKey(QuestionLibrary, on_delete=models.CASCADE, null=True, blank=True)
+
+    prescreener_id = models.IntegerField(null=True, blank=True)
+    campaign_id = models.IntegerField(null=True, blank=True)
+    pe_campaign_id = models.IntegerField(null=True, blank=True)
 
 class DuplicateorFraudPanelistID(models.Model):
     panelist_id = models.CharField(max_length=200, null=True,blank=True)
@@ -109,6 +118,10 @@ class DuplicateorFraudPanelistID(models.Model):
     threat_potential = models.CharField(max_length=100, null=True, blank=True)
     threat_potential_score = models.CharField(max_length=100, null=True, blank=True)
     duplicate_score = models.CharField(max_length=100, null=True, blank=True)
+    
+    # new field added
+    county_mismath = models.CharField(max_length=100, null=True, blank=True)
 
 class BuildQueryOpearator(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
+

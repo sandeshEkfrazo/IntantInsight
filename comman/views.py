@@ -323,26 +323,44 @@ class Translatelanguage(APIView):
         return Response({'text': alldata})
 
 
+import csv
+
 class UploadSupplierXLS(APIView):
     def post(self, request):
-        supplier_excel_file = request.FILES['supplier_excel_file']
+        csv_file = request.FILES.get('csv_file')
+        if csv_file:
+            # Process the uploaded CSV file
+            decoded_file = csv_file.read().decode('utf-8')
+            csv_data = csv.reader(decoded_file.splitlines(), delimiter=',')
+            next(csv_data)  # Skip header row if present
 
-        if not supplier_excel_file.name.endswith('.xlsx'):
-            return Response({'Result': {'Error': 'File Format should be xlsx'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            for row in csv_data:
+                # Extract data from each row and create model instances
+                instance = Supplier(Supplier_Name=row[0], Status='Active', is_for_project=True)
+                instance.save()
+            return Response("success")
 
-        dataframe = pd.read_excel(supplier_excel_file)
+            return Response("succcess")
 
-        print("dataframe==>", dataframe)
 
-        lit_of_supplier = [item for item in  dataframe['Vendor'].tolist()]
-        print("lit_of_user_id==>",lit_of_supplier) 
+        # supplier_excel_file = request.FILES['supplier_excel_file']
+
+        # if not supplier_excel_file.name.endswith('.xlsx'):
+        #     return Response({'Result': {'Error': 'File Format should be xlsx'}}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        # dataframe = pd.read_excel(supplier_excel_file)
+
+        # print("dataframe==>", dataframe)
+
+        # lit_of_supplier = [item for item in  dataframe['Vendor'].tolist()]
+        # print("lit_of_user_id==>",lit_of_supplier) 
         
-        for i in lit_of_supplier:
+        # for i in lit_of_supplier:
 
-            # Supplier.objects.create(Supplier_Name=i, is_for_project=True)
-            Supplier.objects.filter(Supplier_Name=i).update(Status='Active')
+        #     # Supplier.objects.create(Supplier_Name=i, is_for_project=True)
+        #     Supplier.objects.filter(Supplier_Name=i).update(Status='Active')
 
-        return Response({'message': 'file uploaded successfully'})
+        # return Response({'message': 'file uploaded successfully'})
 
 
 class AddEndPagesTemplate(APIView):
@@ -395,4 +413,3 @@ class SheduleTask(APIView):
 
 
 
-        

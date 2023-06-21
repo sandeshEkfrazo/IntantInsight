@@ -6,6 +6,25 @@ from datetime import datetime
 from rest_framework.status import *
 from django.utils.decorators import method_decorator
 from account.backends_ import *
+import csv
+
+
+class ImportCSVClient(APIView):
+    def post(self, request):
+        csv_file = request.FILES.get('csv_file')
+        if csv_file:
+            # Process the uploaded CSV file
+            decoded_file = csv_file.read().decode('utf-8')
+            csv_data = csv.reader(decoded_file.splitlines(), delimiter=',')
+            next(csv_data)  # Skip header row if present
+
+            for row in csv_data:
+                # Extract data from each row and create model instances
+                instance = Client(clientname=row[1], address=row[2] ,email=row[3], website=row[4] ,company=row[5] ,create_timestamp=row[6], last_update_timestamp=row[7])
+                instance.save()
+            return Response("success")
+           
+
 
 @method_decorator([authorization_required], name='dispatch')
 class ServiveApiView(APIView):

@@ -35,6 +35,10 @@ class PageMaskingLogic(models.Model):
     questio_choice_id = models.IntegerField(null=True, blank=True)  #answer_id
     target_question_id = models.IntegerField(null=True, blank=True)
     hide_answer_id = models.IntegerField(null=True, blank=True)
+
+    pe_campaign = models.ForeignKey(PeCampaign, on_delete=models.CASCADE, null=True, blank=True)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, null=True, blank=True)
+    prescreener = models.ForeignKey(Prescreener, on_delete=models.CASCADE, null=True, blank=True)
     
 
 class PagePipingLogic(models.Model):
@@ -43,6 +47,10 @@ class PagePipingLogic(models.Model):
     question_id = models.IntegerField(null=True, blank=True)
     next_question_id = models.IntegerField(null=True, blank=True)
     next_question_text = models.TextField(null=True, blank=True)
+
+    pe_campaign = models.ForeignKey(PeCampaign, on_delete=models.CASCADE, null=True, blank=True)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, null=True, blank=True)
+    prescreener = models.ForeignKey(Prescreener, on_delete=models.CASCADE, null=True, blank=True)
 
 class PeCampaignCampaignPrescreenerQuestionLibraryPage(models.Model):
     pe_campaign = models.ForeignKey(PeCampaign, on_delete=models.CASCADE, related_name="pecampaign", null=True, blank=True)

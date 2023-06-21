@@ -166,6 +166,7 @@ class IESamplingStatus(models.Model):
     duplicate_score = models.CharField(max_length=200, null=True, blank=True)
     threat_potential_score = models.CharField(max_length=200, null=True, blank=True)
 
+
 class ProjectDashboard(models.Model):
     response_rate = models.CharField(max_length=100, null=True, blank=True)
     total_spent =  models.IntegerField(null=True, blank=True)

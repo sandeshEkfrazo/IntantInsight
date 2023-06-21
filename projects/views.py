@@ -71,8 +71,8 @@ class ProjectDateFilter(APIView):
         serializer = ProjectSerializer(project_obj, many=True)
         return Response({'data':  serializer.data})
 
-d = "Copy(1)"
-print("d==>",d[5:-1], d.replace(d[5:-1] ,'2'))
+# d = "Copy(1)"
+# print("d==>",d[5:-1], d.replace(d[5:-1] ,'2'))
 
 @method_decorator([authorization_required], name='dispatch')
 class ExportDuplicateIDsForProject(APIView):
@@ -84,10 +84,12 @@ class ExportDuplicateIDsForProject(APIView):
 
         writer = csv.writer(response)
 
-        writer.writerow(['Project Id', 'Duplicate Panelist id', 'vendor_id', 'vendor_name', 'status','threat potential score', 'duplicate score', 'OS', 'Ip Address', 'Browser', 'Country', 'Survey Start Time', 'Survey End Time'])
+        columns = ['Project Id', 'Duplicate Panelist id', 'vendor_id', 'vendor_name', 'status','threat potential score', 'duplicate score', 'OS', 'Ip Address', 'Browser', 'Country', 'Survey Start Time', 'Survey End Time', 'Country Mismatch']
+
+        writer.writerow(columns)
 
         # obj = IESamplingStatus.objects.select_related('project').select_related('user').all().values_list('project__id','project__name','project__status', 'user_id', 'user__email', 'user__city', 'user__date_of_joining', 'status')
-        obj = DuplicateorFraudPanelistID.objects.filter(project_id=project_id).values_list('project_id','panelist_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential_score', 'duplicate_score', 'os', 'ip_adress', 'browser', 'user_country', 'survey_start_time', 'survey_end_time')
+        obj = DuplicateorFraudPanelistID.objects.filter(project_id=project_id).values_list('project_id','panelist_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential_score', 'duplicate_score', 'os', 'ip_adress', 'browser', 'user_country', 'survey_start_time', 'survey_end_time', 'county_mismath')
         for i in obj:
             writer.writerow(i)
         response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
@@ -102,44 +104,38 @@ class ExportOrCopyProject(APIView):
         company_id = data['company_id']
 
         if is_export:
-            # dist_data = {
-            #         'Project Id': [],
-            #         'Panelist id': [],
-            #         'Start date': [],
-            #         'End date': [],
-            #         'Project Status': [],
-            #         'Vendor': [],
-            #         'Vendor Id': []
-            #         }
-            
-            # obj = IESamplingStatus.objects.filter(project_id=project_id).values('project__id', 'vendor_tid', 'project__start_date', 'project__end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id')
-
-            # for i in obj:
-            #     dist_data['Project Id'].append(i['project__id'])
-            #     dist_data['Panelist id'].append(i['vendor_tid'])
-            #     dist_data['Start date'].append(i['project__start_date'])
-            #     dist_data['End date'].append(i['project__end_date'])
-            #     dist_data['Project Status'].append(i['project__status'])
-            #     dist_data['Vendor'].append(i['supplier__Supplier_Name'])
-            #     dist_data['Vendor Id'].append(i['supplier_id'])
-
-            # dff = pd.DataFrame(dist_data)
-
-            # excel_file = dff.to_excel('/instantInsight/site/public/media/','output.xlsx')
-            # return excel_file
-
             #===================== this is for csv data=========================
 
             response = HttpResponse(content_type='application/vnd.ms-excel')
 
             writer = csv.writer(response)
 
-            writer.writerow(['Project Id', 'Panelist id', 'Start date', 'End date', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market', 'Panelist Status', 'Start_time', 'End_time', 'OS', 'Browser', 'IP-address', 'Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score'])
+            columns = ['Project Id', 'Panelist id', 'Start date', 'End date', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market', 'Panelist Status', 'Start_time', 'End_time', 'OS', 'Browser', 'IP-address', 'Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score']
 
-            # obj = IESamplingStatus.objects.select_related('project').select_related('user').all().values_list('project__id','project__name','project__status', 'user_id', 'user__email', 'user__city', 'user__date_of_joining', 'status')
+            if Prescreener.objects.filter(project=data['project_id']).exists():
+                prescreener_obj = Prescreener.objects.get(project=data['project_id'])
+
+                precsreener_questions = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_obj.id).values('question_library__question_name')
+
+                for qst in precsreener_questions:
+                    columns.append(qst['question_library__question_name'])
+
+            writer.writerow(columns)
+
             obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project__start_date', 'project__end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type','status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
+
+            # answer_list = []
+            # prescreener_questions_and_answers_obj_of_ext_panleist = ExternalSamplePanelistAnswer.objects.filter(prescreener_id=int(prescreener_obj.id)).values()
+
+            # for answers in prescreener_questions_and_answers_obj_of_ext_panleist:
+            #     print("==>>>>>",answers)
+
+            #     tuple(obj).append(answers['panelist_id'])
+
             for i in obj:
                 writer.writerow(i)
+                # row_data = list(i) + answer_list
+                # writer.writerow(row_data)
             response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
             return response
         else:
@@ -158,16 +154,11 @@ class ExportOrCopyProject(APIView):
 
             st = SurveyStatus.objects.filter(company=company_id)
             for st in st:
-                redirect_link_prefix = "https://instantinsightz.com/survey-"+st.name+"?projects="+str(copied_project)
+                redirect_link_prefix = settings.LIVE_URL+"/survey-"+st.name+"?projects="+str(copied_project)
                 data = redirect_link_prefix+"&status="+st.name+"&rid="+str(uuid.uuid1())[:16]+"&uid={uid}"
                 data_create = ProjectRedirects.objects.create(link=data, project_id=copied_project, survey_status_id=st.id)
 
-            
-            
-            print("project_id==>", project_id)
-
             enable_rd_obj = EnableRd.objects.get(project_id=project_id)
-            print("enable_rd_obj==>>",enable_rd_obj)
             enable_rd_obj.id = None
             enable_rd_obj.project_id = obj.id
 
@@ -328,7 +319,7 @@ class ProjecttView(viewsets.ModelViewSet):
 
                 st = SurveyStatus.objects.filter(company=request.data['company'])
                 for st in st:
-                    redirect_link_prefix = "https://instantinsightz.com/survey-"+st.name+"?projects="+str(project_obj.id)
+                    redirect_link_prefix = settings.LIVE_URL+"/survey-"+st.name+"?projects="+str(project_obj.id)
                     data = redirect_link_prefix+"&status="+st.name+"&rid="+str(uuid.uuid1())[:16]+"&uid={uid}"
                     data_create = ProjectRedirects.objects.create(link=data, project_id=project_obj.id, survey_status_id=st.id)  
 
@@ -595,7 +586,7 @@ class RequirementFormApi(GenericAPIView):
                 return Response({'error': 'Name Already Exist for this requirement form'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             requiremnet_create = RequirementForm.objects.create(survey_topic_id=survey_topic, subject_line=subject_line, actual_survey_length=actual_survey_length, target_audience_type=target_audience_type, b2b_b2c_dropdowns=b2b_b2c_dropdowns, target_audience_textbox=target_audience_textbox, de_dupe_needed=de_dupe_needed, live_survey_link=live_survey_link, test_survey_link=test_survey_link, project_id=pk, de_dupe_project_id=de_dupe_project_id)
 
-            masked_url_for_client = "https://instantinsightz.com/pid="+str(pk)+"&mid="+str(uuid.NAMESPACE_X500.hex + uuid.uuid4().hex + uuid.uuid4().hex)
+            masked_url_for_client = settings.LIVE_URL+"/pid="+str(pk)+"&mid="+str(uuid.NAMESPACE_X500.hex + uuid.uuid4().hex + uuid.uuid4().hex)
 
             RequirementForm.objects.filter(id=requiremnet_create.id).update(masked_url_with_unique_id=masked_url_for_client)
 
@@ -659,7 +650,7 @@ class MaskedLinkClick(APIView):
             Project.objects.filter(id=pid).update(status="Draft")
 
         request.session['vid'] = False
-        request.session['offer_url'] = "https://instantinsightz.com/pid="+str(pid)+"&mid="+str(mid)+"&uid="+str(uid)
+        request.session['offer_url'] = settings.LIVE_URL+"/pid="+str(pid)+"&mid="+str(mid)+"&uid="+str(uid)
 
         hashids = Hashids(min_length=8)
         ints = hashids.decode(str(uid))
@@ -675,7 +666,7 @@ class MaskedLinkClick(APIView):
             print("screening_link", screening_link, descrypted_uid)
 
             if PrescreenerSurvey.objects.filter(prescreener_id=Prescreener.objects.get(project=pid).id, panelist_id=int(descrypted_uid)).exists():
-                return HttpResponseRedirect("https://instantInsightz.com/already-attended-survey") 
+                return HttpResponseRedirect(settings.LIVE_URL+"/already-attended-survey") 
             return HttpResponseRedirect(screening_link)
         else:          
             # req = RequirementForm.objects.get(project_id=pid)
@@ -710,7 +701,7 @@ class MaskedLinkClick(APIView):
                 live_link = str(obj)
                 terminate_link = live_link.replace('{uid}', str(uid))
                 print("already attened")
-                return HttpResponseRedirect("https://instantInsightz.com/already-attended-survey")
+                return HttpResponseRedirect(settings.LIVE_URL+"/already-attended-survey")
             elif Project.objects.get(id=pid).total_complete == IESamplingStatus.objects.filter(project_id=pid, IE="internal").count():
                 obj = ProjectRedirects.objects.get(project_id=pid, survey_status_id=2).link
                 live_link = str(obj)
@@ -783,7 +774,7 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
             # return HttpResponseRedirect("https://instantinsightz.com/already-attended-survey")
 
             print("terminating")
-            return "https://instantinsightz.com/already-attended-survey"
+            return settings.LIVE_URL+"/already-attended-survey"
         else:
             print("going to live survey")
             now = datetime.datetime.now()
@@ -799,10 +790,10 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
             # return HttpResponseRedirect(updated_link)
 
 
-a = ["a", "b", "c"]
+# a = ["a", "b", "c"]
 
-if "a" and "b" in a:
-    print("there")
+# if "a" and "b" in a:
+#     print("there")
 
 
 # def redirectClientredirectForRdCheck(request, pid, sid, mid, vid):
@@ -816,6 +807,8 @@ class GetRDResponse(APIView):
         vid = request.data['values']['vid']
 
         ip_address = ""
+
+        print("==>> all ids==>>", pid, sid, mid,vid)
 
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
@@ -834,136 +827,161 @@ class GetRDResponse(APIView):
         extermnal_start_time = request.session['external_start_time']
         external_end_current_time = now.strftime("%c")
 
-        if "low" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=29) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                print("redirect link in low risk ===>", redirect_link)
-                return Response({'redirect_url': redirect_link})
+        project_obj = Project.objects.get(id=pid)
+        enable_geo_location = project_obj.enable_geo_location
+
+        print("enable geo location==>>", enable_geo_location, request.data['Surveys'][0]['country_mismatch'])
+        if enable_geo_location and request.data['Surveys'][0]['country_mismatch'] == 1:
+            print("geo location is enable")
+            terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+            redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+
+            if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                pass
             else:
-                print("duplicate scrore is not 100", vid)
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                if request.session['vid'] == True:
+                    supplier_obj = Supplier.objects.get(id=sid)
+                    DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time, county_mismath=request.data['Surveys'][0]['country_mismatch'])
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+            return Response({'redirect_url': redirect_terminate_link})
+        else:        
+            if "low" in request.data['risk_list']:
+                print("request.data==>", request.data)
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=29) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    print("redirect link in low risk ===>", redirect_link)
+                    return Response({'redirect_url': redirect_link})
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    print("duplicate scrore is not 100", vid)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                print("printing in low risk else", redirect_terminate_link)
-                return Response({'redirect_url': redirect_terminate_link})
-        
-        if "medium" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=69) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+                    print("printing in low risk else", redirect_terminate_link)
+                    return Response({'redirect_url': redirect_terminate_link})
+            
+            if "medium" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=69) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
-        
-        if "high" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+                    return HttpResponseRedirect(redirect_terminate_link)
+            
+            if "high" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
-        
-        if "low" and "medium" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=69) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+                    return HttpResponseRedirect(redirect_terminate_link)
+            
+            if "low" and "medium" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=69) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
-        
-        if "low" and "high" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=29) or (request.data['Respondent']['threat_potential_score'] >=70 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+                    return HttpResponseRedirect(redirect_terminate_link)
+            
+            if "low" and "high" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=30) or (request.data['Respondent']['threat_potential_score'] >=70 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-        if "medium" and "high" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=30 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    return HttpResponseRedirect(redirect_terminate_link)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+            if "medium" and "high" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=30 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
 
-        if "low" and "medium" and "high" in request.data['risk_list']:
-            if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
-                redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
-                return HttpResponseRedirect(redirect_link)
-            else:
-                terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
+                    return HttpResponseRedirect(redirect_terminate_link)
 
-                if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                    pass
+            if "low" and "medium" and "high" in request.data['risk_list']:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=100) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                    redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
+                    return HttpResponseRedirect(redirect_link)
                 else:
-                    if request.session['vid'] == True:
-                        supplier_obj = Supplier.objects.get(id=sid)
-                        DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                    terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
+                    redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
 
-                return HttpResponseRedirect(redirect_terminate_link)
-        # return Response(request.data)
+                    if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
+                        pass
+                    else:
+                        if request.session['vid'] == True:
+                            supplier_obj = Supplier.objects.get(id=sid)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+
+                    return HttpResponseRedirect(redirect_terminate_link)
+            # return Response(request.data)
 
 
 class VendorMaskedLinkClick(APIView):
     def get(self, request, pid, sid, mid, vid):
 
+        project_obj = Project.objects.get(id=pid)
+
+        print("staus of project==>>", project_obj.is_deleted, project_obj.status)
+
+        if project_obj.is_deleted or project_obj.status == 'Closed':
+            return HttpResponse("<h1 style='text-align: center'>currently survey is not available. <br> Thank You.</h1>")
+
         request.session['vid'] = True
 
-        print("starts  with==>",vid.startswith("robas"))
         if vid.startswith("robas"):
             redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, None)
             return HttpResponseRedirect(redirect_link)
@@ -997,147 +1015,27 @@ class VendorMaskedLinkClick(APIView):
             request.session['external_start_time'] = current_time
 
             if "low" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
-
-                # print("printing in low risk if")
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # # print("r.json()", r.json(), 'https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud=170716409&sy_nr=20210575&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=29) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     print("redirect link in low risk ===>", redirect_link)
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     print("duplicate scrore is not 100", vid)
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     print("printing in low risk else", redirect_terminate_link)
-                #     return HttpResponseRedirect(redirect_terminate_link)
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
 
             if "medium" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=69) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
-
-            if "high" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=100) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
-
-            if "low" and "medium" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
                 
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=69) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
-
+            if "high" in risk_level_list:
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                
+            if "low" and "medium" in risk_level_list:
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                
             if "low" and "high" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
-
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=29) or (r.json()['Respondent']['threat_potential_score'] >=70 and r.json()['Respondent']['threat_potential_score'] <=100) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
 
             if "medium" and "high" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
 
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=30 and r.json()['Respondent']['threat_potential_score'] <=100) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
-
+    
             if "low" and "medium" and "high" in risk_level_list:
-                return redirect('http://instantinsightz.com/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
-                # r = requests.get('https://prod.rtymgt.com/api/v4/respondents/search/5e53da50-a809-4dbc-aca8-89e47566041f?sn_ud='+str(vid)+'&sy_nr='+str(pid)+'&rt_cy_ce=us&rt_sr_pd='+str(vid))
-
-                # if (r.json()['Respondent']['threat_potential_score'] >=1 and r.json()['Respondent']['threat_potential_score'] <=100) and r.json()['Surveys'][0]['duplicate_score'] == 100:
-                #     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, r.json())
-                #     return HttpResponseRedirect(redirect_link)
-                # else:
-                #     terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
-                #     redirect_terminate_link = list(terminated_link)[0]['terminated_link'].replace('<#id#>', str(vid))
-
-                #     if DuplicateorFraudPanelistID.objects.filter(panelist_id=vid, project_id=pid).exists():
-                #         pass
-                #     else:
-                #         supplier_obj = Supplier.objects.get(id=sid)
-                #         DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= r.json()['Respondent']['threat_potential'] ,threat_potential_score= r.json()['Respondent']['threat_potential_score'], duplicate_score=r.json()['Surveys'][0]['duplicate_score'])
-
-                #     return HttpResponseRedirect(redirect_terminate_link)
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                
 
         if EnableRd.objects.get(project_id=pid).enable_rd == False:
             redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, None)
@@ -1225,7 +1123,7 @@ class RequirementFormDetailApi(GenericAPIView):
 
 # print(uuid.uuid4().hex[:10])
 
-print("last requirement form ===>>",RequirementForm.objects.filter(project_id=285).last().id)
+# print("last requirement form ===>>",RequirementForm.objects.filter(project_id=285).last().id)
 
 @method_decorator([authorization_required], name='dispatch')
 class ExternalSamplingApiView(GenericAPIView):
@@ -1283,7 +1181,7 @@ class ExternalSamplingApiView(GenericAPIView):
                 # req_id = RequirementForm.objects.get(project_id=project_id).id
                 req_id = RequirementForm.objects.filter(project_id=project_id).last().id
 
-                masked_url_for_supplier = "https://instantinsightz.com/pid="+str(project_id)+"&sid="+str(supplier_id)+"&mid="+str(uuid.uuid4().hex)+"&vid=XXXX"
+                masked_url_for_supplier = settings.LIVE_URL+"/pid="+str(project_id)+"&sid="+str(supplier_id)+"&mid="+str(uuid.uuid4().hex)+"&vid=XXXX"
                     
                 supplier_masked_links = SupplierMaskedLink.objects.create(
                             supplier_id=supplier_id, masked_link=masked_url_for_supplier, project_id=project_id)
@@ -1638,24 +1536,34 @@ class SampleStatus(APIView):
 
             # print("supplier_id= in sample status", supplier_id)
             # print("printd sandesh  project -id",data, data['pid'])
-            if(IESamplingStatus.objects.filter(user_id=data['uid'], supplier_id=supplier_id).exists()):
+
+            os_with_version =  request.user_agent.os.family+request.user_agent.os.version_string
+
+            extermnal_start_time = request.session['external_start_time']
+            now = datetime.datetime.now()
+            # external_end_current_time = now.strftime("%H:%M:%S")
+            external_end_current_time = now.strftime("%c")
+
+            hostname=socket.gethostname()   
+            IPAddr=socket.gethostbyname(hostname)
+
+            print("data of uid==> ", data['uid'])
+
+            if(IESamplingStatus.objects.filter(user_id=data['uid'], supplier_id=supplier_id, project_id=int(data['pid'])).exists()):
                 # print('coming to if block supplier id is', supplier_id)
                 url = str(ExternalSampling.objects.get(project_id=int(data['pid']), supplier_id=supplier_id).terminated_link)
                 updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
 
+                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'])
+
                 return Response(updated_url)
             else:
                 # print('coming to else block supplier id is', supplier_id)
-                os_with_version =  request.user_agent.os.family+request.user_agent.os.version_string
-
-                extermnal_start_time = request.session['external_start_time']
-                now = datetime.datetime.now()
-                # external_end_current_time = now.strftime("%H:%M:%S")
-                external_end_current_time = now.strftime("%c")
-
-                hostname=socket.gethostname()   
-                IPAddr=socket.gethostbyname(hostname)  
+                  
                  
+
+                print("vendor id befor store ==>", request.session['client_transaction_id'])
+
 
                 IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score']) 
 
@@ -1669,7 +1577,7 @@ class SampleStatus(APIView):
 
                     return Response(updated_url)
                 if(data['status'] == 'terminated'):
-                    print("2")
+                    print("2 terminated")
                     url = str(ExternalSampling.objects.get(project_id=int(data['pid']), supplier_id=supplier_id).terminated_link)
                     updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
 

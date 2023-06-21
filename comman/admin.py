@@ -22,11 +22,11 @@ class PageRoutingLogic(admin.ModelAdmin):
 
 @admin.register(PageMaskingLogic)
 class Logics(admin.ModelAdmin):
-    list_display = ['id', 'name' ,'page' ,'question_id' ,'questio_choice_id' ,'target_question_id' ,'hide_answer_id']
+    list_display = ['id', 'name' ,'page' ,'question_id' ,'questio_choice_id' ,'target_question_id' ,'hide_answer_id', 'pe_campaign', 'campaign_id', 'prescreener']
 
 @admin.register(PagePipingLogic)
 class Logics(admin.ModelAdmin):
-    list_display = ['id', 'name' ,'page' ,'question_id' ,'next_question_id', 'next_question_text']
+    list_display = ['id', 'name' ,'page' ,'question_id' ,'next_question_id', 'next_question_text', 'pe_campaign', 'campaign_id', 'prescreener']
 
 @admin.register(DashboardData)
 class DashboardData(admin.ModelAdmin):
