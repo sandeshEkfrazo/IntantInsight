@@ -59,6 +59,8 @@ class PeCampaignCampaignPrescreenerQuestionLibraryPage(models.Model):
     question_library = models.ForeignKey(QuestionLibrary, on_delete=models.CASCADE, related_name="pe_questionlibrary", null=True, blank=True)
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="pe_questionlibrary", null=True, blank=True)
 
+    is_deleted_question = models.BooleanField(default=False, null=True, blank=True)
+
 class QuestionsLinkedPage(models.Model):
     question_library = models.ForeignKey(QuestionLibrary, on_delete=models.CASCADE, null=True, blank=True)
     page = models.ForeignKey(Page, on_delete=models.CASCADE, null=True, blank=True)

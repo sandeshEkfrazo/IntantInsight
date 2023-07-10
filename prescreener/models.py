@@ -102,6 +102,7 @@ class ExternalSamplePanelistAnswer(models.Model):
 class DuplicateorFraudPanelistID(models.Model):
     panelist_id = models.CharField(max_length=200, null=True,blank=True)
     project_id = models.CharField(max_length=100, null=True, blank=True)
+    market = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=100, null=True, blank=True)
     IE = models.CharField(max_length=100, null=True, blank=True)
     campaign_id = models.IntegerField(null=True, blank=True)

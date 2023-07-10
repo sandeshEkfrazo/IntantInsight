@@ -66,7 +66,8 @@ from datetime import timedelta
 class CampaignTypeView(ListAPIView):
     serializer_class = CampaignTypeSerializer
     queryset = CampaignType.objects.all()
-    pagination_class = MyPagination
+    # pagination_class = MyPagination
+
     # def get(self, request):
     #     values = CampaignType.objects.all().values()
     #     return Response({'result': {'company_type': values}})
@@ -89,7 +90,8 @@ class CampaignTypeView(ListAPIView):
 class CommissionModelView(ListAPIView):
     serializer_class = CommissionModelSerializer
     queryset = CommissionModel.objects.all()
-    pagination_class = MyPagination
+    # pagination_class = MyPagination
+    
     # def get(self, request, *args, **kwargs):
     #     values = CommissionModel.objects.all().values()
     #     return Response({'result': {'commision_model': values}})
@@ -114,7 +116,7 @@ print(str(uuid.uuid1())[:5])
 def convertBase64toPath(campaignImage, imgeName):
     split_base_url_data = campaignImage.split(';base64,')[1]
     imgdata1 = base64.b64decode(split_base_url_data)
-    filename1 = "/instantInsight/site/public/media/camapainImages/"+imgeName+'.png'
+    filename1 = "/"+settings.MAINDOMAIN_NAME+"/site/public/media/camapainImages/"+imgeName+'.png'
     camapainImages = '/camapainImages/'+imgeName+'.png'
     ss=  open(filename1, 'wb')
     print(ss)
@@ -184,14 +186,27 @@ class ExportOrCloneCampaign(APIView):
 # @method_decorator([authorization_required], name='dispatch')
 class CampaignView(viewsets.ModelViewSet):
     serializer_class = CampaignSerializer
+    pagination_class = MyPagination
+    queryset = Campaign.objects.filter(is_deleted=False).order_by('-id')
 
     def get_queryset(self):
-        if self.request.query_params:
-            campaign_obj = Campaign.objects.filter(status=self.request.query_params['id'])
-            return campaign_obj
-        else:
-            allval = Campaign.objects.all().order_by('-id')
-            return allval
+        queryset = super().get_queryset()
+
+        should_paginate = self.request.query_params.get('paginate', False)
+
+        if should_paginate:
+        
+            page_size = self.request.query_params.get('page_size')
+            if page_size is not None:
+                self.pagination_class.page_size = int(page_size)
+            
+            page_number = self.request.query_params.get('page')
+            if page_number is not None:
+                self.pagination_class.page = int(page_number)
+
+            return self.paginate_queryset(queryset)
+        
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         try:    
@@ -253,7 +268,7 @@ class CampaignView(viewsets.ModelViewSet):
                 campaign_object = Campaign.objects.get(id=campaign_obj.id)
                 serializer_data = CampaignSerializer(campaign_object)
 
-                campaign_link = +settings.LIVE_URL+"/c/cid="+str(campaign_obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
+                campaign_link = settings.LIVE_URL+"/c/cid="+str(campaign_obj.id)+"&sid=<#sid#>&tid={tid}"  # cid = campaign_id
                 # survey_template_link = "https://robas.thestorywallcafe.com/surveyTemplate?cid="+str(campaign_obj.id) # cid = campaign_id
                 survey_template_link = settings.LIVE_URL+"/campaign-login/cid="+str(campaign_obj.id)
 
@@ -1971,7 +1986,7 @@ class SurveyTemplateApiView(APIView):
         print("panelistId===>>", panelist_id)
 
         if prescreener_id:
-            pages_for_prescreener = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id).values()
+            pages_for_prescreener = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, is_deleted_question=False).values()
         
             pages_ids = []
             for i in pages_for_prescreener:
@@ -1986,7 +2001,7 @@ class SurveyTemplateApiView(APIView):
                 # print(k)
                 page_Q = []
                 page_questions = {}
-                for p in PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=k).values():
+                for p in PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=k,  is_deleted_question=False).values():
                     if(p['question_library_id']!= None):
 
                         if language !='english':
@@ -2078,7 +2093,8 @@ class SurveyTemplateApiView(APIView):
                 page_list.append(page_dict)
                 page_dict = {}
 
-            return Response({'page_details': page_list})
+            sorted_data_by_page = sorted(page_list, key=lambda x: x["page_id"])
+            return Response({'page_details': sorted_data_by_page})
 
         if campaign_id:
             # if UserSurvey.objects.fiter(panelist_id=panelist_id).exists():

@@ -102,7 +102,8 @@ class Questionlibrary(GenericAPIView):
             return Response({'result': {'message': "question deleted successfully"}})
 
         if prescreener_id:
-            value = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(question_library_id=question_id, prescreener_id=prescreener_id, page_id=page_id).delete()
+            # value = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(question_library_id=question_id, prescreener_id=prescreener_id, page_id=page_id).delete()
+            value = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(question_library_id=question_id, prescreener_id=prescreener_id, page_id=page_id).update(is_deleted_question=True)
             return Response({'result': {'message': "question deleted successfully"}})
 
     def post(self, request):
@@ -216,7 +217,8 @@ class PrescreenerApiView(generics.ListCreateAPIView):
         Page.objects.create(name="Terminated", prescreener_id=data.id)
         default_page = Page.objects.create(name="Default", prescreener_id=data.id)
 
-        default_question_id = [106, 172]
+        # default_question_id = [106, 172] # instant Insght
+        default_question_id = [97, 98] # robas
 
         for questions in default_question_id:
             PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.create(prescreener_id=data.id, question_library_id=questions, page_id=default_page.id)
@@ -233,7 +235,7 @@ class PrescreenerDetailView(APIView):
         
 
     def put(self, request, pk):
-        data = rePrescreenerPageApiViewquest.data
+        data = request.data
         name = data.get('name')
         link = data.get('link')
         enable_otp_verification = data.get('enable_otp_verification')
@@ -255,7 +257,7 @@ class PrescreenerDetailView(APIView):
 class PrescreenerLogicQuestions(GenericAPIView):
     def get(self, request, pk, p_id):  #send pe-campaign_id in id and page_id in pk
 
-        res = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=pk).values('question_library_id')
+        res = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=pk, is_deleted_question=False).values('question_library_id')
         q_id = []
         val = []
         questions = {}

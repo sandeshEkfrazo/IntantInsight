@@ -20,6 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 LIVE_URL = "https://instantinsightz.com"
 # LIVE_URL = "https://robas.thestorywallcafe.com"
 
+MAINDOMAIN_NAME = 'robas'
+# MAINDOMAIN_NAME = 'instantInsight'
+
+
 
 
 # Quick-start development settings - unsuitable for production

@@ -45,5 +45,6 @@ urlpatterns = [
 
     path('get-rd-response-from-client', GetRDResponse.as_view()),
 
+    path('logic-terminate', RedirectFromLogic.as_view()),
     path('', include(router.urls)),
 ]

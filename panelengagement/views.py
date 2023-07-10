@@ -677,7 +677,7 @@ class PageApiview(GenericAPIView):
     def get(self, request,pk):
         final_result = []
         questions = {}
-        res = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=pk).values(
+        res = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=pk, is_deleted_question=False).values(
             'question_library_id',
             'question_library__question_name',
             'question_library__question_type_id',
@@ -863,7 +863,11 @@ class PageApiview(GenericAPIView):
             if question_library_id is not None: 
                 for questions in question_library_id:
                     if QuestionLibrary.objects.filter(id=questions).exists():
-                        if PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, question_library_id=questions, page_id=page_id).exists():
+                        if PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, question_library_id=questions, page_id=page_id, is_deleted_question=True).exists():
+                            PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, question_library_id=questions, page_id=page_id).update(is_deleted_question=False)
+                            return Response({'result':{'message': 'page question created successfully'}})
+
+                        if PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, question_library_id=questions, page_id=page_id, is_deleted_question=False).exists():
                             return Response({'message': 'Question already exist for this page'}, status=status.HTTP_406_NOT_ACCEPTABLE)
                         else:
                             question_library = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.create(prescreener_id=prescreener_id, question_library_id=questions, page_id=page_id)
@@ -1234,7 +1238,7 @@ class QuestionChoiceForQuestion(GenericAPIView):
 
             print(qst.id)
             page_data = []
-            p_data = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.exclude(question_library_id=qst.id).values() & PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=p_id).values()
+            p_data = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.exclude(question_library_id=qst.id, is_deleted_question=False).values() & PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(page_id=p_id, is_deleted_question=False).values()
 
             for x in p_data:
                 # print(x)

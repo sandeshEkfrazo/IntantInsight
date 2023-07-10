@@ -32,6 +32,7 @@ class Quotas(models.Model):
 class Country(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     symbol = models.CharField(max_length=100, null=True, blank=True)
+    code = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.name

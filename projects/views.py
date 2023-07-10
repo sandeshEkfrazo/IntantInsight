@@ -74,6 +74,10 @@ class ProjectDateFilter(APIView):
 # d = "Copy(1)"
 # print("d==>",d[5:-1], d.replace(d[5:-1] ,'2'))
 
+
+# class TerminateFromLogicAPI(APIView):
+
+
 @method_decorator([authorization_required], name='dispatch')
 class ExportDuplicateIDsForProject(APIView):
     def post(self, request):
@@ -84,12 +88,13 @@ class ExportDuplicateIDsForProject(APIView):
 
         writer = csv.writer(response)
 
-        columns = ['Project Id', 'Duplicate Panelist id', 'vendor_id', 'vendor_name', 'status','threat potential score', 'duplicate score', 'OS', 'Ip Address', 'Browser', 'Country', 'Survey Start Time', 'Survey End Time', 'Country Mismatch']
+        columns = ['Project Id', 'Market', 'Duplicate Panelist id', 'vendor_id', 'vendor_name', 'status','threat potential score', 'duplicate score', 'OS', 'Ip Address', 'Browser', 'Panelist-Country', 'Survey Start Time', 'Survey End Time', 'Country Mismatch']
 
         writer.writerow(columns)
 
         # obj = IESamplingStatus.objects.select_related('project').select_related('user').all().values_list('project__id','project__name','project__status', 'user_id', 'user__email', 'user__city', 'user__date_of_joining', 'status')
-        obj = DuplicateorFraudPanelistID.objects.filter(project_id=project_id).values_list('project_id','panelist_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential_score', 'duplicate_score', 'os', 'ip_adress', 'browser', 'user_country', 'survey_start_time', 'survey_end_time', 'county_mismath')
+        obj = DuplicateorFraudPanelistID.objects.filter(project_id=project_id).values_list('project_id', 'market','panelist_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential_score', 'duplicate_score', 'os', 'ip_adress', 'browser', 'user_country', 'survey_start_time', 'survey_end_time', 'county_mismath')
+        
         for i in obj:
             writer.writerow(i)
         response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
@@ -110,34 +115,120 @@ class ExportOrCopyProject(APIView):
 
             writer = csv.writer(response)
 
-            columns = ['Project Id', 'Panelist id', 'Start date', 'End date', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market', 'Panelist Status', 'Start_time', 'End_time', 'OS', 'Browser', 'IP-address', 'Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score']
+            columns = ['Project Id', 'Panelist id', 'Start date', 'End date', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market Type', 'Panelist Status', 'Start_time', 'End_time', 'OS', 'Browser', 'IP-address', 'Panelist-Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score']
 
+            answer_tuple = ()
+
+            answers_list = []
+            final_list = []
+
+            tuple_dict = {}
+            
+
+            obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project__start_date', 'project__end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type','status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
+
+            # writer.writerow(columns)
+
+            Question_ids_list = []
             if Prescreener.objects.filter(project=data['project_id']).exists():
                 prescreener_obj = Prescreener.objects.get(project=data['project_id'])
 
-                precsreener_questions = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_obj.id).values('question_library__question_name')
+                precsreener_questions = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_obj.id).values('question_library__question_name', 'question_library_id')
 
                 for qst in precsreener_questions:
                     columns.append(qst['question_library__question_name'])
 
-            writer.writerow(columns)
+                    Question_ids_list.append(qst['question_library_id'])
 
-            obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project__start_date', 'project__end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type','status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
+                
+                print("question id list ==>>>", Question_ids_list)
 
-            # answer_list = []
-            # prescreener_questions_and_answers_obj_of_ext_panleist = ExternalSamplePanelistAnswer.objects.filter(prescreener_id=int(prescreener_obj.id)).values()
+                prescreener_questions_and_answers_obj_of_ext_panleist = ExternalSamplePanelistAnswer.objects.filter(prescreener_id=int(prescreener_obj.id)).values()
+            
+                for i in obj:
+                    final_list.append(i)
+                    new_list = []
+                    new_list__ = ["NA"] * len(Question_ids_list)
 
-            # for answers in prescreener_questions_and_answers_obj_of_ext_panleist:
-            #     print("==>>>>>",answers)
+                    for j in list(prescreener_questions_and_answers_obj_of_ext_panleist):
+                        if i[1] == j['panelist_id']:
+                            
+                            options_list = j['answers'].split(',')
 
-            #     tuple(obj).append(answers['panelist_id'])
+                            if j['question_library_id'] == 97:
 
-            for i in obj:
-                writer.writerow(i)
-                # row_data = list(i) + answer_list
-                # writer.writerow(row_data)
-            response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
-            return response
+                                index_ = Question_ids_list.index(j['question_library_id'])
+                                new_list__[index_] = j['answers']
+                            else:
+                                # ----------------------  new things  -----------------------
+                                # print("before for loop==>", options_list, options_list[0].strip().isdigit())
+                                for qs_li in Question_ids_list:
+
+                                    if qs_li == j['question_library_id'] and len(options_list) == 1 and options_list[0].strip().isdigit():
+
+                                        index_ = Question_ids_list.index(j['question_library_id'])
+                                        
+                                        if QuestionChoice.objects.filter(Q(id=int(options_list[0].strip()))).exists():
+                                            question_choices_obj = QuestionChoice.objects.filter(Q(id=int(options_list[0].strip()))).values()
+
+                                            
+                                            for qst_chc in question_choices_obj:
+                                                new_list__[index_] = qst_chc['name']
+
+                                    else:  
+                                        index_ = Question_ids_list.index(j['question_library_id'])
+                                        if options_list[0].strip().isdigit():
+                                            multiple_choice_list = []
+                                            for mul_ch_ans in options_list:
+                                                if QuestionChoice.objects.filter(Q(id=int(mul_ch_ans.strip()))).exists():
+                                                    mul_question_choices_obj = QuestionChoice.objects.filter(Q(id=int(mul_ch_ans.strip()))).values()
+
+                                                    for mul_qst_chc in mul_question_choices_obj:
+                                                        multiple_choice_list.append(mul_qst_chc['name'])
+
+                                            multiple_choice_result = ', '.join(multiple_choice_list)
+
+                                            new_list__[index_] =  multiple_choice_result 
+                                        else:
+                                            new_list__[index_] =  j['answers']
+
+
+
+                    if len(new_list__) != 0 and new_list__ != Question_ids_list:
+                        print("if new len new_list__", new_list__)
+                        new_tuple = i + tuple(new_list__)
+                        final_list.append(new_tuple)
+
+                
+                for tuple_item in final_list:
+                    key = tuple_item[1]
+                    if key in tuple_dict:
+                        # If a tuple with the same key already exists, compare the lengths and update if necessary
+                        if len(tuple_item) > len(tuple_dict[key]):
+                            tuple_dict[key] = tuple_item
+                    else:
+                        # Add the tuple to the dictionary if the key doesn't exist yet
+                        tuple_dict[key] = tuple_item
+
+                # Get the unique tuples from the dictionary values
+                final_result = list(tuple_dict.values())
+
+                writer.writerow(columns)
+
+                for k in final_result:
+                    writer.writerow(k) 
+                response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
+                return response
+
+            else:
+                writer.writerow(columns)
+
+                for d in obj:
+                    writer.writerow(d) 
+                response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
+                return response 
+
+            
         else:
             obj = Project.objects.get(id=project_id)
             obj.id = None
@@ -196,43 +287,107 @@ class DeleteOrRestoreProjectStatus(APIView):
 @method_decorator([authorization_required], name='dispatch')
 class ProjecttView(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
-    # pagination_class = MyPagination
+    pagination_class = MyPagination
+    queryset = Project.objects.filter(is_deleted=False).order_by('-id')
 
     def get_queryset(self):
-        # print("args==> kwargs==>", self.request.query_params , self.request.build_absolute_uri())
-        # if "?status=" in self.request.build_absolute_uri():
-        if self.request.query_params:
-            status_obj = Project.objects.filter(status=self.request.query_params['status'])
-            return status_obj
-        else:
-            CurrentDate = datetime.datetime.now()
-            # for i in Project.objects.all().values():
+        queryset = super().get_queryset()
 
+        start_date = self.request.query_params.get('start_date_time')
+        end_date = self.request.query_params.get('end_date_time')
 
-            #     internal_completed = IESamplingStatus.objects.filter(project_id=i['id'], IE='internal', status='completed').count()
-            #     print("internal project==>"+ str(i['id']), str(internal_completed))
+        if start_date is not None and end_date is None:
+            print('only start date')
+            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time)))
 
-            #     external_sample_obj = ExternalSampling.objects.filter(project_id=i['id']).values('supplier_id', 'supplier__Supplier_Name')
-            #     for j in external_sample_obj:
-            #         external_total_complete = IESamplingStatus.objects.filter(project_id=i['id'], IE='external', supplier_id=j['supplier_id'], status='completed').count()
+        if end_date is not None and start_date is None:
+            print('only end date')
+            one_day_extra = timedelta(days=1)
+            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(end_date__lte=end_date_and_time)))
 
-            #         print("external project==>"+ str(i['id']), str(external_total_complete))
+        status = self.request.query_params.get('status')
+        search_name = self.request.query_params.get('search')
 
-                # end_date_timestamp = i['end_date'].timestamp()
-                # end_date = datetime.datetime.fromtimestamp(end_date_timestamp)
+        if search_name is not None and status is None:
+            print("only search")
+            queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False))
 
-                # project_end_date = datetime.datetime.fromtimestamp(end_date_timestamp).strftime("%d/%m/%Y %H:%M")
-                # project_end_datetime = datetime.datetime.strptime(project_end_date, "%d/%m/%Y %H:%M")
+        
+        if status is not None and start_date is None and end_date is None and search_name is None:
+            print("===>>>>>>only status")
+            queryset = Project.objects.filter(status=self.request.query_params['status'], is_deleted=False)
 
-                # if CurrentDate > project_end_datetime:
-                #     print("closed project", i['id'])
-                #     Project.objects.filter(id=i['id']).update(status='Closed') 
-                # else:
-                #     print("draft project", i['id'])
-                #     Project.objects.filter(id=i['id']).update(status='Draft')
+        if search_name is not None and status is not None:
+            print('search and status')
+            queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params['status']))
 
-            allval = Project.objects.all().order_by('-id')
-            return allval
+            print(queryset.count())
+
+        
+        if start_date is not None and end_date is not None and status is None:
+            print('only start date and end date')
+            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+            one_day_extra = timedelta(days=1)
+
+            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
+
+        if start_date is not None and end_date is not None and status is not None:
+            print("===?????strt date end date status")
+            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+            one_day_extra = timedelta(days=1)
+
+            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+            queryset = Project.objects.filter(Q(status=self.request.query_params.get('status')) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
+
+            print("count", queryset.count())
+            
+
+        
+
+        is_deleted_projet = self.request.query_params.get('is_deleted')
+        if is_deleted_projet is not None:
+            print("is deleted")
+            queryset = Project.objects.filter(is_deleted=True)
+
+        if is_deleted_projet is not None and search_name is not None: 
+            queryset = queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=True))
+
+       
+        if start_date is not None and status is not None and end_date is None:
+            print('start date and staus')
+            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) & (Q(start_date__gte=start_date_and_time)))
+
+        if end_date is not None and status is not None and start_date is None:
+            print('end date and status')
+            one_day_extra = timedelta(days=1)
+            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+            queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) &  (Q(end_date__lte=end_date_and_time)))
+
+        
+
+        should_paginate = self.request.query_params.get('paginate', False)
+
+        if should_paginate:
+
+            page_size = self.request.query_params.get('page_size')
+            if page_size is not None:
+                self.pagination_class.page_size = int(page_size)
+            
+            page_number = self.request.query_params.get('page')
+            if page_number is not None:
+                self.pagination_class.page = int(page_number)
+
+            return self.paginate_queryset(queryset)
+        
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         try:    
@@ -617,6 +772,12 @@ from hashids import Hashids
 import time
 import requests
 
+# class GetPrecreenerTerminatedAPI(APIView):
+#     def post(self, request):
+#         data = request.data
+
+        
+
 class MaskedLinkClick(APIView):
     def get(self, request, pid, mid, uid):
 
@@ -748,14 +909,18 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
         print("screening_link", screening_link)
         # return HttpResponseRedirect(screening_link)
 
+        request.session['client_transaction_id'] = str(vid)
+
         if PrescreenerSurvey.objects.filter(panelist_id=str(vid)).exists():
             req = RequirementForm.objects.filter(project_id=pid).last()
             live_link = str(req.live_survey_link)
             updated_link = live_link.replace('<#id#>', str(uuid.uuid1())[:11])
             return updated_link
-
-        if PrescreenerSurvey.objects.filter(~Q(panelist_id=str(vid))).exists():
+        else:
             return screening_link
+
+        # if PrescreenerSurvey.objects.filter(~Q(panelist_id=str(vid))).exists():
+        #     return screening_link
     else:
         # req = RequirementForm.objects.get(project_id=pid)
         req = RequirementForm.objects.filter(project_id=pid).last()
@@ -770,7 +935,7 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
         updated_link = live_link.replace('<#id#>', str(uuid.uuid1())[:11])
         print("updated_link", updated_link)
 
-        if IESamplingStatus.objects.filter(Q(project_id=pid) & Q(user_id=vid)).exists():
+        if IESamplingStatus.objects.filter(Q(project_id=pid) & Q(user_id=vid) & ~Q(status='incomplete')).exists():
             # return HttpResponseRedirect("https://instantinsightz.com/already-attended-survey")
 
             print("terminating")
@@ -790,14 +955,29 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
             # return HttpResponseRedirect(updated_link)
 
 
-# a = ["a", "b", "c"]
+class RedirectFromLogic(APIView):
+    def post(self, request):
+        data = request.data
 
-# if "a" and "b" in a:
-#     print("there")
+        supplier_id = request.session['supplier_id']
+
+        precreener_obj = Prescreener.objects.get(id=data['prescreener_id'])
+
+        if data['prescreener_id'] != None:
+            IESamplingStatus.objects.filter(Q(vendor_tid = request.session['client_transaction_id']) & Q(project_id=int(precreener_obj.project)) & Q(supplier_id=supplier_id)).update(status="Prescreener-Terminate")
 
 
-# def redirectClientredirectForRdCheck(request, pid, sid, mid, vid):
-#     return redirect('http://localhost:4200/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid))
+            url = str(ExternalSampling.objects.get(project_id=int(precreener_obj.project), supplier_id=supplier_id).terminated_link)
+            updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
+
+            total_terminated = ProjectDashboard.objects.get(project_id=int(precreener_obj.project), supplier_id=supplier_id).terminated
+            ProjectDashboard.objects.filter(project_id=int(precreener_obj.project), supplier_id=supplier_id).update(complete=int(total_terminated)+1)
+
+            return Response(updated_url)
+
+        return response({'mesage': 'status updated succesfully'})
+
+from django.core.mail import send_mail
 
 class GetRDResponse(APIView):
     def post(self, request):
@@ -805,6 +985,24 @@ class GetRDResponse(APIView):
         sid = request.data['values']['sid']
         mid = request.data['values']['mid']
         vid = request.data['values']['vid']
+
+
+        project_obj = Project.objects.get(id=pid).country
+
+        project_market_name = []
+        for p_cn in project_obj:
+            project_market_name.append(p_cn['name'])
+
+        counrty_names = ', '.join(project_market_name)
+        # sendMailForTesting
+
+        send_mail(
+            "Panelist RD Response :"+ str(vid),
+            str(request.data),
+            "from@example.com",
+            ["bhargavi@ekfrazo.in", "pruthvi@ekfrazo.in"],
+            fail_silently=False,
+        )
 
         ip_address = ""
 
@@ -822,15 +1020,37 @@ class GetRDResponse(APIView):
 
         print("getCountryName===>> in get RD===>", getCountryName)
 
-        now = datetime.datetime.now()
+        # now = datetime.datetime.now()
         # external_end_current_time = now.strftime("%H:%M:%S")
+        # extermnal_start_time = request.session['external_start_time']
+        # external_end_current_time = now.strftime("%c")
+
+
+        c3 = getCountry(ip_address)
+        if Country.objects.filter(code=c3[0]).exists():
+            country_obj = Country.objects.get(code=c3[0])
+            new_list = list(c3)
+            new_list[0] = country_obj.name
+
+            c3 = tuple(new_list)
+
+        # print("after c3===>",c3[1].strftime("%c"))
         extermnal_start_time = request.session['external_start_time']
-        external_end_current_time = now.strftime("%c")
+        external_end_current_time = c3[1].strftime("%c")
+        
 
         project_obj = Project.objects.get(id=pid)
         enable_geo_location = project_obj.enable_geo_location
 
-        print("enable geo location==>>", enable_geo_location, request.data['Surveys'][0]['country_mismatch'])
+        os_with_version =  request.user_agent.os.family+request.user_agent.os.version_string
+
+        request.session['user_country'] = request.data['Respondent']['country']
+
+        if request.data['Surveys'][0]['duplicate_score'] != 100:
+            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=request.data['Respondent']['country'], duplicate_score=request.data['Surveys'][0]['duplicate_score'] ,threat_potential_score=request.data['Respondent']['threat_potential_score'], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+        
+
+        print("enable geo location==>>", enable_geo_location, request.data)
         if enable_geo_location and request.data['Surveys'][0]['country_mismatch'] == 1:
             print("geo location is enable")
             terminated_link = ExternalSampling.objects.filter(project_id=pid, supplier_id=sid).values('terminated_link')
@@ -841,13 +1061,13 @@ class GetRDResponse(APIView):
             else:
                 if request.session['vid'] == True:
                     supplier_obj = Supplier.objects.get(id=sid)
-                    DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time, county_mismath=request.data['Surveys'][0]['country_mismatch'])
+                    DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
             return Response({'redirect_url': redirect_terminate_link})
         else:        
             if "low" in request.data['risk_list']:
                 print("request.data==>", request.data)
-                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=29) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=30) and request.data['Surveys'][0]['duplicate_score'] != 100:
                     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
                     print("redirect link in low risk ===>", redirect_link)
                     return Response({'redirect_url': redirect_link})
@@ -861,13 +1081,13 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     print("printing in low risk else", redirect_terminate_link)
                     return Response({'redirect_url': redirect_terminate_link})
             
             if "medium" in request.data['risk_list']:
-                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=69) and request.data['Surveys'][0]['duplicate_score'] != 100:
+                if (request.data['Respondent']['threat_potential_score'] >=1 and request.data['Respondent']['threat_potential_score'] <=70) and request.data['Surveys'][0]['duplicate_score'] == 100:
                     redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, request.data)
                     return HttpResponseRedirect(redirect_link)
                 else:
@@ -879,7 +1099,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -896,7 +1116,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -913,7 +1133,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -930,7 +1150,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
 
@@ -947,7 +1167,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
 
@@ -964,7 +1184,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=getCountryName, os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time , survey_end_time=external_end_current_time)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             # return Response(request.data)
@@ -972,23 +1192,60 @@ class GetRDResponse(APIView):
 
 class VendorMaskedLinkClick(APIView):
     def get(self, request, pid, sid, mid, vid):
+        request.session['vid'] = True
+        os_with_version =  request.user_agent.os.family+request.user_agent.os.version_string
+
+        ip_address = ""
+
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+            ip_address = str(ip)
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+            ip_address = str(ip)
+
+
+        c3 = getCountry(ip_address)
+        if Country.objects.filter(code=c3[0]).exists():
+            country_obj = Country.objects.get(code=c3[0])
+            new_list = list(c3)
+            new_list[0] = country_obj.name
+
+            c3 = tuple(new_list)
+
+        print("after c3===>",c3[1].strftime("%c"))
+
+        request.session['external_start_time'] = str(c3[1].strftime("%c"))
+
+
+        # now = datetime.datetime.now()
+        # current_time = now.strftime("%H:%M:%S")
+        # current_time = now.strftime("%c")
+        # request.session['external_start_time'] = current_time
 
         project_obj = Project.objects.get(id=pid)
 
-        print("staus of project==>>", project_obj.is_deleted, project_obj.status)
+        getCountryName = getUserCountry()
 
         if project_obj.is_deleted or project_obj.status == 'Closed':
             return HttpResponse("<h1 style='text-align: center'>currently survey is not available. <br> Thank You.</h1>")
 
-        request.session['vid'] = True
 
         if vid.startswith("robas"):
             redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, None)
+
+
+            extermnal_start_time = request.session['external_start_time']
+
+        
+            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+
+
             return HttpResponseRedirect(redirect_link)
 
 
         # VendorMaskLinkSubFun(request, pid, sid, mid, vid)
-        print("printig enable rd object==>>", EnableRd.objects.filter(project_id=pid).values())
 
         if EnableRd.objects.get(project_id=pid).enable_rd == True:
             risk_level = EnableRd.objects.get(project_id=pid).risk
@@ -997,48 +1254,49 @@ class VendorMaskedLinkClick(APIView):
             for i in risk_level:
                 risk_level_list.append(i['value'])
 
-            ip_address = ""
+            # for single market 
 
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[0]
-                ip_address = str(ip)
-            else:
-                ip = request.META.get('REMOTE_ADDR')
-                ip_address = str(ip)
+            country_code_value = []
+            country_data = project_obj.country
+            for cn_value in country_data:
+                country_code = Country.objects.get(id=cn_value['id']).code
+                country_code_value.append(country_code)                
 
-            getCountryData = getCountry(ip_address)
-
-            now = datetime.datetime.now()
-            # current_time = now.strftime("%H:%M:%S")
-            current_time = now.strftime("%c")
-            request.session['external_start_time'] = current_time
+            # now = datetime.datetime.now()
+            # # current_time = now.strftime("%H:%M:%S")
+            # current_time = now.strftime("%c")
+            # request.session['external_start_time'] = current_time
 
             if "low" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
 
             if "medium" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
                 
             if "high" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
                 
             if "low" and "medium" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
                 
             if "low" and "high" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
 
             if "medium" and "high" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
 
     
             if "low" and "medium" and "high" in risk_level_list:
-                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(getCountryData)+'&risk_list='+str(risk_level_list))
+                return redirect(settings.LIVE_URL+'/masked-link-check?pid='+str(pid)+'&sid='+str(sid)+'&mid='+str(mid)+'&vid='+str(vid)+'&cn='+str(country_code_value[0])+'&risk_list='+str(risk_level_list))
                 
 
         if EnableRd.objects.get(project_id=pid).enable_rd == False:
             redirect_link = VendorMaskLinkSubFun(request, pid, sid, mid, vid, None)
+
+            extermnal_start_time = request.session['external_start_time']
+
+            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+            
             return HttpResponseRedirect(redirect_link)
 
         
@@ -1526,6 +1784,9 @@ class SampleStatus(APIView):
             ip = request.META.get('REMOTE_ADDR')
             ip_address = str(ip)
 
+
+        
+
         if request.session['vid'] == True:
 
             getCountryName = getUserCountry()
@@ -1540,32 +1801,48 @@ class SampleStatus(APIView):
             os_with_version =  request.user_agent.os.family+request.user_agent.os.version_string
 
             extermnal_start_time = request.session['external_start_time']
-            now = datetime.datetime.now()
+            # now = datetime.datetime.now()
             # external_end_current_time = now.strftime("%H:%M:%S")
-            external_end_current_time = now.strftime("%c")
+            # external_end_current_time = now.strftime("%c")
+
+            
+            c3 = getCountry(ip_address)
+            if Country.objects.filter(code=c3[0]).exists():
+                country_obj = Country.objects.get(code=c3[0])
+                new_list = list(c3)
+                new_list[0] = country_obj.name
+
+                c3 = tuple(new_list)
+
+            print("after c3===>",c3[1].strftime("%c"))
+
+            external_end_current_time = str(c3[1].strftime("%c"))
+
+
 
             hostname=socket.gethostname()   
             IPAddr=socket.gethostbyname(hostname)
 
             print("data of uid==> ", data['uid'])
 
-            if(IESamplingStatus.objects.filter(user_id=data['uid'], supplier_id=supplier_id, project_id=int(data['pid'])).exists()):
+            if(IESamplingStatus.objects.filter(Q(user_id=data['uid']) & Q(supplier_id=supplier_id) & Q(project_id=int(data['pid'])) & ~Q(status='incomplete')).exists()):
                 # print('coming to if block supplier id is', supplier_id)
                 url = str(ExternalSampling.objects.get(project_id=int(data['pid']), supplier_id=supplier_id).terminated_link)
                 updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
 
-                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'])
+                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'])
 
                 return Response(updated_url)
             else:
                 # print('coming to else block supplier id is', supplier_id)
                   
-                 
 
-                print("vendor id befor store ==>", request.session['client_transaction_id'])
+                print("vendor id befor store ==>", request.session['client_transaction_id'], data)
+
+                IESamplingStatus.objects.filter(Q(vendor_tid = request.session['client_transaction_id']) & Q(project_id=int(data['pid'])) & Q(supplier_id=supplier_id)).update(status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'], user_id=data['uid'])
 
 
-                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score']) 
+                # IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score']) 
 
                 if(data['status'] == 'completed'):
                     print("1")
@@ -1967,3 +2244,7 @@ class SendEmailThroughCelelry(APIView):
         print("result celery d==>", r)
         print("r.get()==>",r.get())
         return Response(r.get())
+
+
+
+    

@@ -6,7 +6,7 @@ from comman.models import *
 # Register your models here.
 @admin.register(PeCampaignCampaignPrescreenerQuestionLibraryPage)
 class PeCampaignQuestionLibraryPage(admin.ModelAdmin):
-    list_display = ['id', 'pe_campaign', 'campaign', 'prescreener', 'question_library', 'page']
+    list_display = ['id', 'pe_campaign', 'campaign', 'prescreener', 'question_library', 'page', 'is_deleted_question']
 
 @admin.register(Page)
 class LogicType(admin.ModelAdmin):

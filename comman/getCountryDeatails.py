@@ -2,6 +2,9 @@ import geocoder
 from geopy.geocoders import Nominatim
 import requests 
 
+import pytz
+from datetime import datetime
+
 def getUserCountry():
     g = geocoder.ip('me')
     print("g==>>", g)
@@ -28,6 +31,7 @@ def getCountryDetails(ip_address):
     print("gvalue==>", g)
     if g.ok:
         country_name = g.country
+        print("coutry name ==>", country_name)
         return country_name
     else:
         return "Unknown"
@@ -43,6 +47,13 @@ def getCountry(ipAdress):
         print("data==> in getCountry fun",data)
         country = data.get('country')
         if country:
+            country_timezone = pytz.country_timezones.get(country)
+
+            if country_timezone:
+                user_time = datetime.now(pytz.timezone(country_timezone[0]))
+
+                return country, user_time, country_timezone[0]
+
             return country
     return "Unknown"
 

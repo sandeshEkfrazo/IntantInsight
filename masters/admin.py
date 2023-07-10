@@ -25,7 +25,7 @@ class Quotas(ImportExportModelAdmin):
 
 @admin.register(Country)
 class Country(ImportExportModelAdmin):
-    list_display = ['id', 'name', 'symbol']
+    list_display = ['id', 'name', 'symbol', 'code']
 
 @admin.register(B2B)
 class B2B(ImportExportModelAdmin):

@@ -53,7 +53,7 @@ class ExternalSamplePanelistAnswer(admin.ModelAdmin):
 
 @admin.register(DuplicateorFraudPanelistID)
 class DuplicateorFraudPanelistID(admin.ModelAdmin):
-    list_display = ['id','panelist_id', 'project_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential', 'threat_potential_score', 'duplicate_score', 'browser', 'os', 'ip_adress', 'user_country', 'survey_start_time', 'survey_end_time', 'client_id', 'county_mismath']
+    list_display = ['id','panelist_id', 'market', 'project_id', 'supplier_id', 'supplier_name', 'status', 'threat_potential', 'threat_potential_score', 'duplicate_score', 'browser', 'os', 'ip_adress', 'user_country', 'survey_start_time', 'survey_end_time', 'client_id', 'county_mismath']
 
 @admin.register(BuildQueryOpearator)
 class BuildQueryOpearator(admin.ModelAdmin):
