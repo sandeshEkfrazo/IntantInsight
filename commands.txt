@@ -1,0 +1,7 @@
+commands {
+    python-django : python3 manage.py runserver
+    celery_result : celery -A robas worker --loglevel=INFO
+    celery beat : celery -A robas beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    python3 -m venv tutorial-env
+    source tutorial-env/bin/activate
+}

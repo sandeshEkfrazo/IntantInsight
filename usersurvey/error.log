@@ -1,0 +1,13 @@
+[Tue Nov 22 12:50:48.079847 2022] [wsgi:error] [pid 1641210:tid 139655200364288] /instantInsight/venv/lib/python3.8/site-packages/openpyxl/compat/numbers.py:9: UserWarning: NumPy was imported from a Python sub-interpreter but NumPy does not properly support sub-interpreters. This will likely work for most users but might cause hard to track down issues or subtle bugs. A common user of the rare sub-interpreter feature is wsgi which also allows single-interpreter mode.
+[Tue Nov 22 12:50:48.079936 2022] [wsgi:error] [pid 1641210:tid 139655200364288] Improvements in the case of bugs are welcome, but is not on the NumPy roadmap, and full support may require significant effort to achieve.
+[Tue Nov 22 12:50:48.079941 2022] [wsgi:error] [pid 1641210:tid 139655200364288]   import numpy
+[Tue Nov 22 12:50:48.852939 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] 303e6
+[Tue Nov 22 12:50:48.852989 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] 
+[Tue Nov 22 12:50:48.944192 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] pbkdf2_sha256$260000$Sh3e4O19lzGrFR5X4Rnj13$F67mpNNuwfih0m/9tA3e7vlLxOuDVDkW/Xjjui2aMII=
+[Tue Nov 22 12:50:48.944242 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] 
+[Tue Nov 22 12:50:49.033507 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] True
+[Tue Nov 22 12:50:49.033571 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] 
+[Tue Nov 22 12:50:49.249602 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] type==>
+[Tue Nov 22 12:50:49.249652 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124]  
+[Tue Nov 22 12:50:49.249664 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] <class 'list'>
+[Tue Nov 22 12:50:49.249672 2022] [wsgi:error] [pid 1641210:tid 139655200364288] [remote 103.104.223.119:33124] 
