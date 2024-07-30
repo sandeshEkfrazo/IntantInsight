@@ -411,5 +411,83 @@ class SheduleTask(APIView):
         pass
 
 
+class EmployeeRatigsView(APIView):
+    def get(self, request, user_id):
+        if Employeeratings.objects.filter(user_id=user_id).exists():
+            return Response({'exists': True})
+        else:
+            return Response({'exists': False}) 
 
+
+    def post(self, request):
+        if Employeeratings.objects.filter(user_id=request.data.get('user_id')).exists():
+            pass
+        else:
+            Employeeratings.objects.create(
+                user_id = request.data.get('user_id'),
+                ratings = request.data.get('ratings')
+            )
+
+            return Response({'message': "Thanks for your Feedback"})
+        
+class IpTokenApi(APIView):
+    def get(self, request):
+
+        if request.query_params:
+
+            if IPToken.objects.filter(usable=request.query_params.get('in-use')).exists():
+                data = IPToken.objects.filter(usable=request.query_params.get('in-use')).values()
+
+                return Response({'data': data})
+
+        data = IPToken.objects.filter().values()
+
+        return Response({'data': data})
+    
+    def delete(self, request):
+        if request.query_params:
+
+            if IPToken.objects.filter(token=request.query_params.get('token')).exists():
+
+                if IPToken.objects.filter(Q(token=request.query_params.get('token')) & Q(usable=True)):
+                    return Response({'error': "you can't delete the in-use ip"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+                IPToken.objects.filter(token=request.query_params.get('token')).delete()
+                return Response({'message': 'token deleted successfully'})
+            else:
+                return Response({'error': 'token does not exists'}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request):
+
+        data = request.data
+
+        ip_token = data['ip_token']
+
+        if IPToken.objects.filter(token=ip_token).exists():
+            return Response({"error": 'token already exists'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            IPToken.objects.all().update(usable=False)
+
+            IPToken.objects.create(
+                token = ip_token,
+                usable = True
+            )
+
+            return Response({'message': 'ip-token added successfully'})
+        
+    def put(self, request):
+        data = request.data
+        ip_token = data['ip_token']
+
+        if IPToken.objects.filter(token=ip_token).exists():
+            IPToken.objects.all().update(usable=False)
+
+
+            IPToken.objects.filter(token=ip_token).update(
+                usable = True
+            )
+
+            return Response({'message': 'token updated successfully'})
+
+        
 

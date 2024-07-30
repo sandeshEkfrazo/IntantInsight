@@ -9,7 +9,6 @@ from panelbuilding.models import *
 
 @shared_task(bind=True)
 def updateProjectStatusAndSendMail(self, *args, **kwargs):
-    print("kwargs==>",kwargs)
 
     user_obj = CustomUser.objects.get(id=kwargs['created_by_id'])
     project_obj = Project.objects.get(id=kwargs['project_id'])

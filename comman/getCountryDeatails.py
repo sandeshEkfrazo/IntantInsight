@@ -1,9 +1,9 @@
 import geocoder
 from geopy.geocoders import Nominatim
 import requests 
-
 import pytz
 from datetime import datetime
+from .models import *
 
 def getUserCountry():
     g = geocoder.ip('me')
@@ -38,10 +38,23 @@ def getCountryDetails(ip_address):
 
     print("ipaddress==>", ip_address)
 
+last_request_time = None
+
+
+
 def getCountry(ipAdress):
-    url = f"http://ipinfo.io/{ipAdress}/json"
+
+    usable_ip_token = IPToken.objects.get(usable=True)
+
+    # url = f"http://ipinfo.io/{ipAdress}/json"
+    # url = f"https://ipinfo.io/{ipAdress}/?token=15262704c2a908"
+    url = f"https://ipinfo.io/{ipAdress}/?token={usable_ip_token.token}"
+
 
     response = requests.get(url)
+    
+    print("--->>", response.status_code, response)
+
     if response.status_code == 200:
         data = response.json()
         print("data==> in getCountry fun",data)
@@ -50,10 +63,11 @@ def getCountry(ipAdress):
             country_timezone = pytz.country_timezones.get(country)
 
             if country_timezone:
-                user_time = datetime.now(pytz.timezone(country_timezone[0]))
+                user_time = datetime.datetime.now(pytz.timezone(country_timezone[0]))
 
                 return country, user_time, country_timezone[0]
 
             return country
     return "Unknown"
+
 

@@ -218,7 +218,9 @@ class PrescreenerApiView(generics.ListCreateAPIView):
         default_page = Page.objects.create(name="Default", prescreener_id=data.id)
 
         # default_question_id = [106, 172] # instant Insght
-        default_question_id = [97, 98] # robas
+        default_questions = ['Age', 'Gender'] # robas
+
+        default_question_id = QuestionLibrary.objects.filter(question_name__in=default_questions).values_list('id', flat=True)
 
         for questions in default_question_id:
             PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.create(prescreener_id=data.id, question_library_id=questions, page_id=default_page.id)

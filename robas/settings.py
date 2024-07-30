@@ -125,18 +125,53 @@ WSGI_APPLICATION = 'robas.wsgi.application'
 # }
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'robas',
+#         'USER':'root',
+#         'PASSWORD':'',
+#         'HOST':'127.0.0.1',
+#         'PORT':'3307',
+#     }
+# }
+
+
+# DATABASES = {
+#         'default': 
+#             {
+#             'ENGINE': 'django.db.backends.mysql',
+#             'NAME': 'robasNew',
+#             'USER': 'robastest',    
+#             'PASSWORD': 'Ekfrazo@123#',    
+#             'HOST': '143.110.184.45',    
+#             'PORT': '3306',
+#             }
+#     }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'robas',
-        'USER':'root',
-        'PASSWORD':'',
-        'HOST':'127.0.0.1',
-        'PORT':'3307',
+        'default': 
+            {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'robasnew',
+            'USER': 'robasNew',    
+            'PASSWORD': 'robasNew@123#R',    
+            'HOST': '143.110.184.45',    
+            'PORT': '3306',
+            }
     }
-}
 
-
+# DATABASES = {
+#         'default': 
+#             {
+#             'ENGINE': 'django.db.backends.mysql',
+#             'NAME': 'InstantInsight',
+#             'USER': 'robasuser',    
+#             'PASSWORD': 'InstantInsight@123#',    
+#             'HOST': '143.110.185.59',    
+#             'PORT': '3306',
+#             }
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -200,6 +235,9 @@ EMAIL_HOST_PASSWORD = 'ugkcwzivtlojlpai'
 EMAIL_PORT = 587
 APPLICATION_EMAIL = 'Robas<donotreplyrobas@gmail.com>'
 DEFAULT_FROM_EMAIL = 'Robas<donotreplyrobas@gmail.com>'
+
+
+
 
 
 

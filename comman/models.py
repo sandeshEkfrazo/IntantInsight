@@ -87,3 +87,12 @@ class EnableRd(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
     enable_rd = models.BooleanField(default=False, null=True, blank=True)
     risk =  models.JSONField(null=True, blank=True)
+
+class Employeeratings(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,blank=True, null=True)
+    ratings = models.IntegerField(blank=True, null=True)
+
+class IPToken(models.Model):
+    token = models.CharField(max_length=100,blank=True, null=True)
+    usable = models.BooleanField(default=False,blank=True, null=True)
+    created_datetime = models.DateTimeField(auto_now=True,blank=True, null=True)

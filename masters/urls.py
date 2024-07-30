@@ -21,6 +21,9 @@ urlpatterns = [
     path('b2c', B2CApi.as_view()),
     path('b2c/<int:pk>', B2CApi.as_view()),
 
+    path('health-care', HealthCareAPIView.as_view()),
+    path('health-care/<int:pk>', HealthCareAPIView.as_view()),
+
     path('survey-topic', SurevyTopicApi.as_view()),
     path('survey-topic/<int:pk>', SurevyTopicApi.as_view()),
 

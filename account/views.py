@@ -46,6 +46,20 @@ from django.template.loader import get_template
 import jwt
 
 
+class UpdateUserStatus(APIView):
+    def post(self, request):
+        is_active = request.data.get('is_active')
+        user_id = request.data.get('user_id')
+
+        CustomUser.objects.filter(id=user_id).update(is_active=is_active)
+
+        if is_active:
+            return Response({'message': 'user enabled successfully'})
+        else:
+            return Response({'message': 'user disabled successfully'})
+
+
+
 # print(make_password('1234'))
 # print(check_password('1234','pbkdf2_sha256$260000$x4LuTvjrgmyQE7JaZnP3sZ$Dkmf78TGidy51SL8HhbeRqNcMicydK5F/xGdz7tx5UE='))
 
@@ -365,10 +379,10 @@ class UserRegister(APIView):
 
     def get(self, request):
         if request.query_params:
-            user_obj = UserAccess.objects.filter(user_id=request.query_params['id']).values('user_id', 'user__username','user__first_name','user__last_name','user__email','user__phone_number', 'access')
+            user_obj = UserAccess.objects.filter(user_id=request.query_params['id']).values('user_id', 'user__username','user__first_name','user__last_name','user__email','user__phone_number', 'access', 'user__is_active')
             return Response({'result': user_obj})
         else:
-            value = CustomUser.objects.all().order_by('username').values('id', 'username', 'role__role_name', 'email', 'phone_number', )
+            value = CustomUser.objects.all().order_by('username').values('id', 'username', 'role__role_name', 'email', 'phone_number', 'is_active')
             return Response({'result': {'users': value}})
 
     def post(self, request):
@@ -456,6 +470,7 @@ class UserLogin(generics.ListCreateAPIView):
         data = request.data
         email = data.get('email')
         password = data.get('password')
+        print("cs",CustomUser.objects.get(email=email).email == email)
 
         user = CustomUser.objects.filter(email=email)
         for user in user:
@@ -463,11 +478,12 @@ class UserLogin(generics.ListCreateAPIView):
             user_id = user.id
             company_id = user.company_id
             data = check_password(password, user.password)
-        if user and data:
-                print("========================",str(settings.JWT_SECRET_KEY))
+        if data and CustomUser.objects.get(email=email).email == email:
+        # if user and data:
+                # print("========================",str(settings.JWT_SECRET_KEY))
                 auth_token = jwt.encode({'user_id': user.id, 'name': user.username, 'exp': datetime.utcnow() + timedelta(days=5)}, str(settings.JWT_SECRET_KEY), algorithm="HS256")
                 authorization = auth_token
-                print(authorization)
+                # print(authorization)
 
                 response = {}
                 response['Authorization']=authorization
@@ -478,7 +494,7 @@ class UserLogin(generics.ListCreateAPIView):
                     userAccessArr.append(ua['item_text'])
 
 
-                return Response({'result': { 'user_info': {'username': username, 'user_id': user_id, 'company_id': company_id, 'token': response['Authorization']}, 'message': 'login successfull', 'access': userAccessArr}}, headers=response, status=HTTP_200_OK)
+                return Response({'result': { 'user_info': {'username': username, 'user_id': user_id, 'company_id': company_id, 'token': response['Authorization'], "is_active": CustomUser.objects.get(email=email).is_active}, 'message': 'login successfull', 'access': userAccessArr}}, headers=response, status=HTTP_200_OK)
         return Response({'result': {'error': 'invalid credential'}}, status=status.HTTP_401_UNAUTHORIZED)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Add User @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2

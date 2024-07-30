@@ -187,7 +187,7 @@ class ExportOrCloneCampaign(APIView):
 class CampaignView(viewsets.ModelViewSet):
     serializer_class = CampaignSerializer
     pagination_class = MyPagination
-    queryset = Campaign.objects.filter(is_deleted=False).order_by('-id')
+    queryset = Campaign.objects.filter().order_by('-id')
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -806,6 +806,7 @@ class CamapaignLoginRedirectView(APIView):
             # return redirect(settings.LIVE_URL+"/campaign-login?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
             return redirect(settings.LIVE_URL+"/email-verified?cid="+cid+"&panelist_id="+panelist_id+"&tid="+tid)
 
+import datetime
 
 class CampaignSubmitApi(APIView):
     # serializer_class = UserSurveySerializer
@@ -1054,11 +1055,9 @@ class getAllPanelistEmail(APIView):
             email_list.append(i['email'])
         return Response({'result': {'emails': email_list}})
 
-ps = make_password("10259")
-print(ps)
-print(check_password("10259", ps))
-
-
+# ps = make_password("10259")
+# print(ps)
+# print(check_password("10259", ps))
 
 class SendOut(APIView):
     def post(self, request):
@@ -1117,57 +1116,71 @@ class SendOut(APIView):
                         UserSurveyOffers.objects.create(user_survey_id=j['Panelist id'], offer_link=custom_offer_link, survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
                 return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
             else:
-                for i in emails:
-                    panelist_obj = UserSurvey.objects.get(email=i)
+                #scheduling now
+                clocked_obj = ClockedSchedule.objects.create(
+                    clocked_time = datetime.datetime.now() + timedelta(seconds=5)
+                )
+                
+                task_start = PeriodicTask.objects.create(name="schduleSendoutNow"+str(clocked_obj.id), task="panelbuilding.tasks.ScheduleSendoutNow",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'emails': emails, 'sender': sender, 'email_body': email_body, 'subject': subject, 'project_id': project_id, 'project_name': project_obj.name, 'project_end_date': str(project_obj.end_date), 'bonus_points': sample_obj['bonus_points']}))
 
-                    panelist_first_name.string.replace_with(panelist_obj.first_name)
-                    panelist_last_name.string.replace_with(panelist_obj.last_name)
-                    surveyTime.string.replace_with(RequirementForm.objects.filter(project_id=project_id).last().actual_survey_length)
-                    points.string.replace_with(Sampling.objects.filter(project_id=project_id).last().bonus_points)
+                ###########
 
-                    panelist_id = panelist_obj.id
-                    encoded_user_id = hashids.encode(int(panelist_id))
+                #  old schedule Now ############
+                # for i in emails:
+                #     panelist_obj = UserSurvey.objects.get(email=i)
 
-                    print("panelist id",panelist_id)
+                #     panelist_first_name.string.replace_with(panelist_obj.first_name)
+                #     panelist_last_name.string.replace_with(panelist_obj.last_name)
+                #     surveyTime.string.replace_with(RequirementForm.objects.filter(project_id=project_id).last().actual_survey_length)
+                #     points.string.replace_with(Sampling.objects.filter(project_id=project_id).last().bonus_points)
+
+                #     panelist_id = panelist_obj.id
+                #     encoded_user_id = hashids.encode(int(panelist_id))
+
+                #     print("panelist id",panelist_id)
                     
 
-                    # clss_link_val['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encrypted_uid.decode("utf-8", "ignore"))
+                #     # clss_link_val['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encrypted_uid.decode("utf-8", "ignore"))
 
-                    # clss['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id)
-                    # clss_link_val.append(RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid=<#user_id#>")
+                #     # clss['href'] = RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid="+str(encoded_user_id)
+                #     # clss_link_val.append(RequirementForm.objects.get(project_id=project_id).masked_url_with_unique_id+"&uid=<#user_id#>")
 
-                    clss['href'] = RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)
-                    clss_link_val.append(RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid=<#user_id#>")
+                #     clss['href'] = RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)
+                #     clss_link_val.append(RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid=<#user_id#>")
 
-                    em_body = soup.prettify()
-                    # send_email_task.delay(emails, sender, email_body, subject)                
-                    email = EmailMessage(subject, em_body, from_email=sender, to=[i])
-                    email.content_subtype = "html"
-                    email.send(fail_silently=False)  
+                #     em_body = soup.prettify()
+                #     # send_email_task.delay(emails, sender, email_body, subject)                
+                #     email = EmailMessage(subject, em_body, from_email=sender, to=[i])
+                #     email.content_subtype = "html"
+                #     email.send(fail_silently=False)  
 
-                    if UserSurveyOffers.objects.filter(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)).exists():
-                        pass
-                    else:
-                        UserSurveyOffers.objects.create(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id), survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
+                #     if UserSurveyOffers.objects.filter(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id)).exists():
+                #         pass
+                #     else:
+                #         UserSurveyOffers.objects.create(user_survey_id=panelist_id, offer_link=RequirementForm.objects.filter(project_id=project_id).last().masked_url_with_unique_id+"&uid="+str(encoded_user_id), survey_name=project_obj.name, points_for_survey=sample_obj['bonus_points'], end_date=project_obj.end_date)
                     
 
-                    if ProjectDashboard.objects.filter(project_id=project_id, ie='internal').exists():
-                        total_invite_sent = ProjectDashboard.objects.get(project_id=project_id, ie='internal').total_invite_sent
-                        ProjectDashboard.objects.filter(project_id=project_id, ie='internal').update(total_invite_sent=int(total_invite_sent)+len(emails), total_clicks=0)
-                    else:
-                        ProjectDashboard.objects.create(project_id=project_id, total_invite_sent=len(emails), total_clicks=0, ie='internal')
+                #     if ProjectDashboard.objects.filter(project_id=project_id, ie='internal').exists():
+                #         total_invite_sent = ProjectDashboard.objects.get(project_id=project_id, ie='internal').total_invite_sent
+                #         ProjectDashboard.objects.filter(project_id=project_id, ie='internal').update(total_invite_sent=int(total_invite_sent)+len(emails), total_clicks=0)
+                #     else:
+                #         ProjectDashboard.objects.create(project_id=project_id, total_invite_sent=len(emails), total_clicks=0, ie='internal')
+
+                # old schecule now ends #
 
             user_survey_obj = UserSurvey.objects.filter(email__in=emails).values()
             # print("list==>>",list(user_survey_obj))
             tempArr = []
             tempDict = {}
 
-            tempSortedData = sorted(list(user_survey_obj), key = itemgetter('campaign_id'))
+            # tempSortedData = sorted(list(user_survey_obj), key = itemgetter('campaign_id'))
             for key, value in groupby(list(user_survey_obj), key = itemgetter('campaign_id')):
-                if CampaignDashboard.objects.get(campaign_id=key).total_invite_sent:
-                    tota_invite_sent = CampaignDashboard.objects.get(campaign_id=key).total_invite_sent
-                else:
-                    tota_invite_sent = 0
+                if CampaignDashboard.objects.filter(campaign_id=key).exists():
+                    if CampaignDashboard.objects.get(campaign_id=key).total_invite_sent:
+                        tota_invite_sent = CampaignDashboard.objects.get(campaign_id=key).total_invite_sent
+                    else:
+                        tota_invite_sent = 0
+                tota_invite_sent = 0
 
                 print("total invite snet==>>", tota_invite_sent)
 
@@ -1187,7 +1200,7 @@ class SendOut(APIView):
                 tempArr.append(tempDict)
                 tempDict = {}
 
-            return Response({'result': {'count': 'mail has been sent to all the panelist email ids'}})
+            return Response({'result': {'count': 'mail has been scheduled now successfully'}})
 
 
         # print(query)

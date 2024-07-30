@@ -39,3 +39,11 @@ class QuestionsLinkedPage(admin.ModelAdmin):
 @admin.register(EnableRd)
 class EnableRd(admin.ModelAdmin):
     list_display = ['project', 'enable_rd', 'risk']
+
+@admin.register(Employeeratings)
+class EmployeeRatigs(admin.ModelAdmin):
+    list_display =['user_id', 'ratings']
+
+@admin.register(IPToken)
+class IPToken(admin.ModelAdmin):
+    list_display = ['id', 'token', 'usable', 'created_datetime']

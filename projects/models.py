@@ -162,10 +162,10 @@ class IESamplingStatus(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
     client_id = models.TextField(null=True, blank=True)
     vendor_tid = models.TextField(null=True, blank=True)
-
     duplicate_score = models.CharField(max_length=200, null=True, blank=True)
     threat_potential_score = models.CharField(max_length=200, null=True, blank=True)
-
+    project_start_date = models.DateTimeField(null=True, blank=True)
+    project_end_date = models.DateTimeField(null=True, blank=True)
 
 class ProjectDashboard(models.Model):
     response_rate = models.CharField(max_length=100, null=True, blank=True)

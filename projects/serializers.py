@@ -48,6 +48,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     updated_by = serializers.StringRelatedField()
     project_type = serializers.StringRelatedField()
     # total_complete = serializers.IntegerField()
+    total_complete = serializers.IntegerField()
     class Meta:
         model = Project
         # fields = '__all__'

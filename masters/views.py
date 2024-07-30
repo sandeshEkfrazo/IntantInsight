@@ -7,7 +7,7 @@ from rest_framework.status import *
 from django.utils.decorators import method_decorator
 from account.backends_ import *
 import csv
-
+from django.db.models import Q
 
 class ImportCSVClient(APIView):
     def post(self, request):
@@ -249,6 +249,44 @@ class B2BApi(APIView):
             B2B.objects.filter(id=pk).delete()
             return Response({'result': {'message': 'B2B deleted successfully'}})
         return Response({'result': {'error': 'B2B id not found to delete'}}, status=status.HTTP_404_NOT_FOUND)
+
+@method_decorator([authorization_required], name='dispatch')
+class HealthCareAPIView(APIView):
+    def get(self, request):
+        if request.query_params.get('id'):
+            all_values = HealthCare.objects.filter(id=request.query_params.get('id')).values()
+            return Response({"result": all_values})
+        else:
+            all_values = HealthCare.objects.all().values()
+            return Response({"result": all_values})
+
+    def post(self, request):
+        data = request.data
+
+        name = data['name']
+
+        if HealthCare.objects.filter(name=name).exists():
+            return Response({'result': {'error': 'Healthcare name already exist'}})
+        else:
+            HealthCare.objects.create(name=name)
+            return Response({'result': {'message': 'Healthcare created successfully'}})
+        
+    def put(self, request, pk):
+        data = request.data
+
+        name = data['name']
+
+        if HealthCare.objects.filter(Q(name=name) & ~Q(id=pk)).exists():
+            return Response({'result': {'error': 'Healthcare name already exist'}})
+        else:
+            HealthCare.objects.filter(id=pk).update(name=name)
+            return Response({'result': {'message': 'Healthcare updated successfully'}})
+
+    def delete(self, request, pk):
+        if HealthCare.objects.filter(id=pk).exists():
+            HealthCare.objects.filter(id=pk).delete()
+            return Response({'result': {'message': 'Healthcare deleted successfully'}})
+        return Response({'result': {'error': 'Healthcare id not found to delete'}}, status=status.HTTP_404_NOT_FOUND)
 
 @method_decorator([authorization_required], name='dispatch')
 class B2CApi(APIView):

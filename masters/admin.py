@@ -51,3 +51,6 @@ class CompanyType(ImportExportModelAdmin):
 class CommissionModel(ImportExportModelAdmin):
     list_display = ['id', 'name']
 
+@admin.register(HealthCare)
+class HealthCare(ImportExportModelAdmin):
+    list_display = ['id', 'name']

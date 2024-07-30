@@ -1565,9 +1565,9 @@ def getEventType(self, event_type_name):
 def redirectExternalSurveyStatus(link):
     return redirect(link)
 
-now = datetime.datetime.now()
-current_time = now.strftime("%H:%M:%S")
-print("cuurent time==>",current_time)
+# now = datetime.datetime.now()
+# current_time = now.strftime("%H:%M:%S")
+# print("cuurent time==>",current_time)
 # start_time = "11:59:00"
 # end_time = "2:00:00"
 

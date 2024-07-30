@@ -29,6 +29,7 @@ class CustomUser(models.Model):
     last_update_timestamp =   models.DateTimeField(auto_now_add=True,verbose_name="Last_update_timestamp",blank=True,null=True)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True, related_name="company_detail")
     role = models.ForeignKey(RoleAccessControl, on_delete=models.CASCADE, null=True, blank=True, related_name="role_access")
+    is_active = models.BooleanField(default=True,blank=True, null=True)
 
     def __str__(self):
         return self.first_name

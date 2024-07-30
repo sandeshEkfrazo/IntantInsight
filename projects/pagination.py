@@ -6,8 +6,10 @@ class MyPagination(PageNumberPagination):
     #     page_size = request.query_params.get('page_size', 10)
     #     return page_size
 
+
     page_size_query_param = 'page_size'
     max_page_size = 100
+
 
 
 

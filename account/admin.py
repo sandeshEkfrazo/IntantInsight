@@ -4,7 +4,7 @@ from .models import *
 # Register your models here.
 @admin.register(CustomUser)
 class CustomUser(admin.ModelAdmin):
-    list_display = ['id','username' ,'first_name' ,'last_name' ,'email' ,'phone_number' ,'password' ,'isAdmin' ,'create_timestamp' ,'last_update_timestamp' ,'company' ,'role']
+    list_display = ['id','username' ,'first_name' ,'last_name' ,'email' ,'phone_number' ,'password' ,'isAdmin' ,'create_timestamp' ,'last_update_timestamp' ,'company' ,'role', 'is_active']
 
 @admin.register(Company)
 class Company(admin.ModelAdmin):

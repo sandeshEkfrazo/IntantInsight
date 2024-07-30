@@ -13,7 +13,7 @@ from rest_framework.generics import GenericAPIView, ListAPIView, ListCreateAPIVi
 from rest_framework.views import APIView
 from projects.models import *
 from rest_framework import generics
-from django.db.models import Q
+from django.db.models import Q, F, Func
 from projects.serializers import *
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_406_NOT_ACCEPTABLE
 from projects.pagination import MyPagination
@@ -25,6 +25,7 @@ import time
 from django_celery_beat.models import ClockedSchedule, CrontabSchedule, PeriodicTask
 from django.http.response import HttpResponse
 import csv
+from django.db.models.functions import Upper
 from datetime import timedelta
 import xlwt
 from datetime import datetime
@@ -115,7 +116,7 @@ class ExportOrCopyProject(APIView):
 
             writer = csv.writer(response)
 
-            columns = ['Project Id', 'Panelist id', 'Start date', 'End date', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market Type', 'Panelist Status', 'Start_time', 'End_time', 'OS', 'Browser', 'IP-address', 'Panelist-Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score']
+            columns = ['Project Id', 'Panelist id', 'Project start_date_time', 'Project end_date_time', 'Project Status', 'Vendor', 'Vendor Id','Client id', 'Market Type', 'Panelist Status', 'Survey start_date_time', 'Survey end_date_time', 'OS', 'Browser', 'IP-address', 'Panelist-Country', 'Vendor TID', 'Duplicate Score', 'Threat Potenital Score']
 
             answer_tuple = ()
 
@@ -124,8 +125,12 @@ class ExportOrCopyProject(APIView):
 
             tuple_dict = {}
             
+            # old query
+            # obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project_start_date', 'project_end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type','status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
 
-            obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project__start_date', 'project__end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type','status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
+            # after capitalizing the project status
+
+            obj = IESamplingStatus.objects.filter(project_id=project_id).values_list('project__id', 'vendor_tid', 'project_start_date', 'project_end_date', 'project__status', 'supplier__Supplier_Name', 'supplier_id', 'client_id', 'project__market_type', 'status', 'survey_start_time', 'survey_end_time', 'os','browser', 'ip_adress', 'user_country', 'vendor_tid', 'duplicate_score', 'threat_potential_score')
 
             # writer.writerow(columns)
 
@@ -224,6 +229,7 @@ class ExportOrCopyProject(APIView):
                 writer.writerow(columns)
 
                 for d in obj:
+                    
                     writer.writerow(d) 
                 response['Content-Disposition'] = 'attachment; filename="pecampaign.xls"'
                 return response 
@@ -284,110 +290,369 @@ class DeleteOrRestoreProjectStatus(APIView):
 # def projectExpired(request):
 #     return render(request, 'projectExpired.html')
 
+from .Qfilters import *
+
 @method_decorator([authorization_required], name='dispatch')
 class ProjecttView(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     pagination_class = MyPagination
-    queryset = Project.objects.filter(is_deleted=False).order_by('-id')
+    queryset = Project.objects.filter().order_by('-id')
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().order_by('-id')
 
-        start_date = self.request.query_params.get('start_date_time')
-        end_date = self.request.query_params.get('end_date_time')
+        page_size = self.request.query_params.get('page_size')
+        page = self.request.query_params.get('page')
 
-        if start_date is not None and end_date is None:
-            print('only start date')
-            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
-            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time)))
+        result = filterProject(queryset, self.request.query_params)
 
-        if end_date is not None and start_date is None:
-            print('only end date')
-            one_day_extra = timedelta(days=1)
-            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
-            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(end_date__lte=end_date_and_time)))
+        if not page and not page_size:
+            self.pagination_class = None
+            return super().get_queryset()
+        return result
 
-        status = self.request.query_params.get('status')
-        search_name = self.request.query_params.get('search')
+    
 
-        if search_name is not None and status is None:
-            print("only search")
-            queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False))
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
 
-        
-        if status is not None and start_date is None and end_date is None and search_name is None:
-            print("===>>>>>>only status")
-            queryset = Project.objects.filter(status=self.request.query_params['status'], is_deleted=False)
+    #     start_date = self.request.query_params.get('start_date_time')
+    #     end_date = self.request.query_params.get('end_date_time')
+    #     status = self.request.query_params.get('status')
+    #     search_name = self.request.query_params.get('search')
+    #     is_deleted_projet = self.request.query_params.get('is_deleted')
+    #     should_paginate = self.request.query_params.get('paginate', False)
+    #     sort_by = self.request.query_params.get('sort_by')
 
-        if search_name is not None and status is not None:
-            print('search and status')
-            queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params['status']))
+    #     if (start_date) and not(search_name or status or sort_by or end_date):
+    #         print('only start date')
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000) + timedelta(1)
+    #         # print("start_date_and_time==>", start_date_and_time + datetime.timedelta(1))
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time)))
 
-            print(queryset.count())
+    #     if (end_date) and not (start_date or search_name or status or sort_by):
+    #         print('only end date')
+    #         one_day_extra = timedelta(days=1)
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & (Q(end_date__lte=end_date_and_time)))
 
-        
-        if start_date is not None and end_date is not None and status is None:
-            print('only start date and end date')
-            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+    #     if (search_name) and not (status or start_date or end_date or sort_by):
+    #         print('only serach')
+    #         queryset = self.queryset.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False))
+
+    #     if (status) and not (start_date or end_date or search_name or sort_by):
+    #         print("only status")
+    #         queryset = Project.objects.filter(status=self.request.query_params['status'], is_deleted=False)
+
+    #     if (sort_by) and not (search_name or status or start_date or end_date):
+    #         print("only sort")
             
-            one_day_extra = timedelta(days=1)
-
-            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
-
-            queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
-
-        if start_date is not None and end_date is not None and status is not None:
-            print("===?????strt date end date status")
-            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (start_date and end_date) and not (search_name or status or sort_by) :
+    #         print('only start date and end date')
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000) + timedelta(1)
             
-            one_day_extra = timedelta(days=1)
+    #         one_day_extra = timedelta(days=1)
 
-            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
 
-            queryset = Project.objects.filter(Q(status=self.request.query_params.get('status')) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
 
-            print("count", queryset.count())
+    #     if (start_date and search_name) and not(end_date or status or sort_by):
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & (Q(start_date__gte=start_date_and_time) & Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__istartswith=search_name))))
+        
+    #     if (start_date and status) and not (end_date or search_name or sort_by):
+    #         print('start date and staus')
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) & (Q(start_date__gte=start_date_and_time)))
+        
+    #     if (start_date and sort_by) and not(end_date or status or search_name):
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(is_deleted=False) & Q(start_date__gte=start_date_and_time)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(is_deleted=False) & Q(start_date__gte=start_date_and_time)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (end_date and search_name) and not(start_date or status or sort_by):
+    #         one_day_extra = timedelta(days=1)
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & Q(end_date__lte=end_date_and_time) & Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)))
+        
+    #     if (end_date and status) and not(start_date or search_name or sort_by):
+    #         print('end date and status')
+    #         one_day_extra = timedelta(days=1)
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+    #         queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) &  (Q(end_date__lte=end_date_and_time)))
+        
+    #     if (end_date and sort_by) and not(start_date or status or search_name):
+    #         one_day_extra = timedelta(days=1)
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(is_deleted=False) & Q(end_date__lte=end_date_and_time)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                Q(is_deleted=False) & Q(end_date__lte=end_date_and_time)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")  
+        
+    #     if (search_name and status) and not (start_date or end_date or sort_by):
+    #         print('search and status')
+    #         queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params['status']))
+
+    #         print(queryset.count())
+        
+    #     if (search_name and sort_by) and not(status or start_date or end_date):
+    #         print("search and sort")
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__istartswith=search_name) | Q(status__istartswith=search_name) | Q(market_type__istartswith=search_name) | Q(created_by__first_name__istartswith=search_name) | Q(client__clientname__istartswith=search_name) |  Q(company__name__istartswith=search_name) |  Q(id__istartswith=search_name)) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (sort_by and status) and not(search_name or start_date or end_date):
+    #         print("sort and status")
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(status=self.request.query_params.get('status')).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(status=self.request.query_params.get('status')).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (start_date and end_date and search_name) and not (sort_by or status):
+    #         print("strt date end date search")
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
             
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+    #         queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
+
+    #         print("count", queryset.count())
+        
+    #     if (start_date and end_date and status) and not (sort_by or search_name):
+    #         print("strt date end date status")
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+    #         queryset = Project.objects.filter(Q(status=self.request.query_params.get('status')) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)))
+
+    #         print("count", queryset.count())
+
+    #     if (start_date and end_date and sort_by) and not (status or search_name):
+    #         print("start and end and sort")
+
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (start_date and search_name and status) and not (sort_by or end_date):
+    #         print("strt date search status")
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         queryset = Project.objects.filter(Q(status=self.request.query_params.get('status')) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) ))
+
+    #         print("count", queryset.count())
+        
+    #     if (start_date and search_name and sort_by) and not (end_date or status):
+    #         print("start and search and sort")
+
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(start_date__gte=start_date_and_time) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                Q(Q(name__istartswith=search_name) | Q(status__istartswith=search_name) | Q(market_type__istartswith=search_name) | Q(created_by__first_name__istartswith=search_name) | Q(client__clientname__istartswith=search_name) |  Q(company__name__istartswith=search_name) |  Q(id__istartswith=search_name)) & Q(start_date__gte=start_date_and_time) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (start_date and status and sort_by) and not (end_date or search_name):
+    #         print("start and status and sort")
+
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(start_date__gte=start_date_and_time) & Q(status=self.request.query_params.get('status')) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                Q(start_date__gte=start_date_and_time) & Q(status=self.request.query_params.get('status')) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (end_date and search_name and status) and not (sort_by or start_date):
+    #         print("strt date search status")
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+    #         queryset = Project.objects.filter(Q(status=self.request.query_params.get('status')) & Q(is_deleted=False) & Q(end_date__lte=end_date_and_time) & Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)))
+
+    #         print("count", queryset.count())
+        
+    #     if (end_date and search_name and sort_by) and not (start_date or status):
+    #         print("end and search and sort")
+
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+            
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(end_date__lte=end_date_and_time) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(end_date__lte=end_date_and_time) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (end_date and status and sort_by) and not (start_date or search_name):
+    #         print("end and status and sort")
+
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+            
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(end_date__lte=end_date_and_time) & Q(status=self.request.query_params.get('status')) & Q(is_deleted=False)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                Q(end_date__lte=end_date_and_time) & Q(status=self.request.query_params.get('status')) & Q(is_deleted=False)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+    #     if (search_name and sort_by and status) and not (start_date or end_date):
+    #         print("search and sort and status")
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status'))
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status'))
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+
+    #     if (search_name and status and start_date and end_date) and not (sort_by):
+    #         print("only search_name and status and start_date and end_date")
+
+    #         start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
+            
+    #         one_day_extra = timedelta(days=1)
+
+    #         end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
+
+    #         queryset = Project.objects.filter(Q(status=self.request.query_params['status']) & Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time) & Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False))
+        
+    #     if (start_date and end_date and search_name and sort_by) and not (status):
+    #         print("only start_date and end_date and search_name and sort_by")
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time))
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time))
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+            
+    #     if (search_name and status and sort_by and end_date) and not(start_date):
+    #         print('only search_name and status and sort_by and end_date')
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(end_date__lte=end_date_and_time)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(end_date__lte=end_date_and_time)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+
+    #     if (start_date and search_name and status and sort_by) and not (end_date):
+    #         print('only start_date and search_name and status and sort_by')
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(start_date__gte=start_date_and_time)
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(start_date__gte=start_date_and_time)
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+
+    #     if (status and start_date and end_date and sort_by) and not (search_name):
+    #         print('only status and start_date and end_date and sort_by')
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                  Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time))
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time))
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+
+    #     if (status and start_date and end_date and sort_by and search_name):
+    #         print("all")
+    #         if self.request.query_params.get('sort_type') == "1":
+    #             queryset = self.queryset.filter(
+    #                  Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)) & Q(Q(name__istartswith=search_name) | Q(status__istartswith=search_name) | Q(market_type__istartswith=search_name) | Q(created_by__first_name__istartswith=search_name) | Q(client__clientname__istartswith=search_name) |  Q(company__name__istartswith=search_name) |  Q(id__istartswith=search_name))
+    #             ).order_by(f"{self.request.query_params.get('sort_by')}")
+    #         if self.request.query_params.get('sort_type') == "-1":
+    #             queryset = self.queryset.filter(
+    #                 Q(is_deleted=False) & Q(status=self.request.query_params.get('status')) & Q(Q(start_date__gte=start_date_and_time) & Q(end_date__lte=end_date_and_time)) & Q(Q(name__istartswith=search_name) | Q(status__istartswith=search_name) | Q(market_type__istartswith=search_name) | Q(created_by__first_name__istartswith=search_name) | Q(client__clientname__istartswith=search_name) |  Q(company__name__istartswith=search_name) |  Q(id__istartswith=search_name))
+    #             ).order_by(f"-{self.request.query_params.get('sort_by')}")
+        
+        
+    #     if is_deleted_projet is not None:
+    #         queryset = Project.objects.filter(is_deleted=True)
+
+    #         if self.request.query_params.get('sort_by'):
+    #             if self.request.query_params.get('sort_type') == "1":
+    #                 queryset = queryset.order_by(f"{self.request.query_params.get('sort_by')}")
+    #             if self.request.query_params.get('sort_type') == "-1":
+    #                 queryset = queryset.order_by(f"-{self.request.query_params.get('sort_by')}")
+
+    #     if is_deleted_projet is not None and search_name is not None: 
+    #         queryset = queryset = Project.objects.filter(Q(Q(name__istartswith=search_name) | Q(status__istartswith=search_name) | Q(market_type__istartswith=search_name) | Q(created_by__first_name__istartswith=search_name) | Q(client__clientname__istartswith=search_name) |  Q(company__name__istartswith=search_name) |  Q(id__istartswith=search_name)) & Q(is_deleted=True))
 
         
+    #     if should_paginate:
 
-        is_deleted_projet = self.request.query_params.get('is_deleted')
-        if is_deleted_projet is not None:
-            print("is deleted")
-            queryset = Project.objects.filter(is_deleted=True)
-
-        if is_deleted_projet is not None and search_name is not None: 
-            queryset = queryset = Project.objects.filter(Q(Q(name__icontains=search_name) | Q(status__icontains=search_name) | Q(market_type__icontains=search_name) | Q(created_by__first_name__icontains=search_name) | Q(client__clientname__icontains=search_name) |  Q(company__name__icontains=search_name) |  Q(id__icontains=search_name)) & Q(is_deleted=True))
-
-       
-        if start_date is not None and status is not None and end_date is None:
-            print('start date and staus')
-            start_date_and_time = datetime.datetime.utcfromtimestamp(int(start_date)/1000)
-            queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) & (Q(start_date__gte=start_date_and_time)))
-
-        if end_date is not None and status is not None and start_date is None:
-            print('end date and status')
-            one_day_extra = timedelta(days=1)
-            end_date_and_time = datetime.datetime.utcfromtimestamp(int(end_date)/1000) + one_day_extra
-            queryset = Project.objects.filter(Q(is_deleted=False) & Q(status=status) &  (Q(end_date__lte=end_date_and_time)))
-
-        
-
-        should_paginate = self.request.query_params.get('paginate', False)
-
-        if should_paginate:
-
-            page_size = self.request.query_params.get('page_size')
-            if page_size is not None:
-                self.pagination_class.page_size = int(page_size)
+    #         page_size = self.request.query_params.get('page_size')
+    #         if page_size is not None:
+    #             self.pagination_class.page_size = int(page_size)
             
-            page_number = self.request.query_params.get('page')
-            if page_number is not None:
-                self.pagination_class.page = int(page_number)
+    #         page_number = self.request.query_params.get('page')
+    #         if page_number is not None:
+    #             self.pagination_class.page = int(page_number)
 
-            return self.paginate_queryset(queryset)
+    #         return self.paginate_queryset(queryset)
         
-        return queryset
+    #     return queryset
 
     def retrieve(self, request, *args, **kwargs):
         try:    
@@ -467,6 +732,8 @@ class ProjecttView(viewsets.ModelViewSet):
 
                 if request.data['enable_rd']:
                     EnableRd.objects.create(project_id=project_obj.id, enable_rd=request.data['enable_rd'], risk=request.data['risk'])
+                else:
+                    EnableRd.objects.create(project_id=project_obj.id, enable_rd=request.data['enable_rd'])
 
                 total_spent = int(request.data['cpi']) * int(request.data['total_complete'])
 
@@ -562,11 +829,18 @@ class ProjecttView(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            project_obj = self.get_object()
-            project_obj.delete()
-            return Response({"result": {'project': 'project deleted successflly'}}, status=status.HTTP_204_NO_CONTENT)
+            if Project.objects.filter(id=kwargs.get('pk')).exists():
+                Project.objects.filter(id=kwargs.get('pk')).delete()
+
+                # project_obj = self.get_object()
+                # project_obj.delete()
+                return Response({"result": {'project': 'project deleted successflly'}}, status=status.HTTP_200_OK)
+
+            else:
+                return Response({"ERROR":"INVALID PROJECT ID", "STATUS": "404 NOT FOUND"}, status=HTTP_404_NOT_FOUND)
         except Project.DoesNotExist as e:
             return Response({"ERROR":"INVALID PROJECT ID", "STATUS": "404 NOT FOUND"}, status=HTTP_404_NOT_FOUND)
+
 
 
 @method_decorator([authorization_required], name='dispatch')
@@ -681,7 +955,7 @@ class RequirementFormList(ListAPIView):
     pagination_class = MyPagination
 
 @method_decorator([authorization_required], name='dispatch')
-class RequirementFormApi(GenericAPIView):
+class   RequirementFormApi(GenericAPIView):
     def get(self, request, pk):
         try:
             val = RequirementForm.objects.filter(project_id=pk)
@@ -738,7 +1012,7 @@ class RequirementFormApi(GenericAPIView):
         # else:
         if Project.objects.filter(id=pk).exists():
             if RequirementForm.objects.filter(Q(subject_line=subject_line) & Q(project_id=pk)).exists():
-                return Response({'error': 'Name Already Exist for this requirement form'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'error': 'Requirement form name is already taken'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             requiremnet_create = RequirementForm.objects.create(survey_topic_id=survey_topic, subject_line=subject_line, actual_survey_length=actual_survey_length, target_audience_type=target_audience_type, b2b_b2c_dropdowns=b2b_b2c_dropdowns, target_audience_textbox=target_audience_textbox, de_dupe_needed=de_dupe_needed, live_survey_link=live_survey_link, test_survey_link=test_survey_link, project_id=pk, de_dupe_project_id=de_dupe_project_id)
 
             masked_url_for_client = settings.LIVE_URL+"/pid="+str(pk)+"&mid="+str(uuid.NAMESPACE_X500.hex + uuid.uuid4().hex + uuid.uuid4().hex)
@@ -780,6 +1054,13 @@ import requests
 
 class MaskedLinkClick(APIView):
     def get(self, request, pid, mid, uid):
+        project_obj = Project.objects.get(id=pid)
+
+        if project_obj.is_deleted or project_obj.status == 'Closed':
+            return HttpResponse("<h1 style='text-align: center'>currently survey is not available. <br> Thank You.</h1>")
+        
+        if project_obj.is_deleted or project_obj.status == 'On Hold':
+            return HttpResponse("<h1 style='text-align: center'>currently survey is on hold. <br> Thank You.</h1>")
 
 
        
@@ -797,8 +1078,8 @@ class MaskedLinkClick(APIView):
 
         #     #------------------------------------#
         # else:
-        project_obj = Project.objects.get(id=pid)
-        total_projects = IESamplingStatus.objects.filter(project_id=pid, status='completed').count()
+        
+        total_projects = IESamplingStatus.objects.filter(project_id=pid, status='Completed').count()
 
         # if project_obj.status == "Closed":
         #     return HttpResponse('This link is not valid no more ! better luck next time') 
@@ -875,10 +1156,12 @@ class MaskedLinkClick(APIView):
                 panel_duplicate = live_link.replace('{uid}', str(uid))
                 return HttpResponseRedirect(panel_duplicate)
             else:
+                project_obj = Project.objects.get(id=pid)
+
                 request.session['start_time'] = current_time
                 request.session['length_of_interview'] = Project.objects.get(id=pid).length_of_interview
 
-                IESamplingStatus.objects.create(project_id=pid, user_id=int(descrypted_uid), IE="internal", survey_start_time=current_time)
+                IESamplingStatus.objects.create(project_id=pid, user_id=int(descrypted_uid), IE="internal", survey_start_time=current_time, project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
 
                 return HttpResponseRedirect(updated_link)
                 # updated the count of started not completed here
@@ -935,7 +1218,7 @@ def VendorMaskLinkSubFun(request, pid, sid, mid, vid, rd):
         updated_link = live_link.replace('<#id#>', str(uuid.uuid1())[:11])
         print("updated_link", updated_link)
 
-        if IESamplingStatus.objects.filter(Q(project_id=pid) & Q(user_id=vid) & ~Q(status='incomplete')).exists():
+        if IESamplingStatus.objects.filter(Q(project_id=pid) & Q(user_id=vid) & ~Q(status='Incomplete')).exists():
             # return HttpResponseRedirect("https://instantinsightz.com/already-attended-survey")
 
             print("terminating")
@@ -975,7 +1258,7 @@ class RedirectFromLogic(APIView):
 
             return Response(updated_url)
 
-        return response({'mesage': 'status updated succesfully'})
+        return Response({'mesage': 'status updated succesfully'})
 
 from django.core.mail import send_mail
 
@@ -996,13 +1279,13 @@ class GetRDResponse(APIView):
         counrty_names = ', '.join(project_market_name)
         # sendMailForTesting
 
-        send_mail(
-            "Panelist RD Response :"+ str(vid),
-            str(request.data),
-            "from@example.com",
-            ["bhargavi@ekfrazo.in", "pruthvi@ekfrazo.in"],
-            fail_silently=False,
-        )
+        # send_mail(
+        #     "Panelist RD Response :"+ str(vid),
+        #     str(request.data),
+        #     "from@example.com",
+        #     ["bhargavi@ekfrazo.in", "pruthvi@ekfrazo.in"],
+        #     fail_silently=False,
+        # )
 
         ip_address = ""
 
@@ -1047,7 +1330,7 @@ class GetRDResponse(APIView):
         request.session['user_country'] = request.data['Respondent']['country']
 
         if request.data['Surveys'][0]['duplicate_score'] != 100:
-            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=request.data['Respondent']['country'], duplicate_score=request.data['Surveys'][0]['duplicate_score'] ,threat_potential_score=request.data['Respondent']['threat_potential_score'], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+            IESamplingStatus.objects.create(project_id=int(pid), status='Incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=request.data['Respondent']['country'], duplicate_score=request.data['Surveys'][0]['duplicate_score'] ,threat_potential_score=request.data['Respondent']['threat_potential_score'], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
         
 
         print("enable geo location==>>", enable_geo_location, request.data)
@@ -1061,7 +1344,7 @@ class GetRDResponse(APIView):
             else:
                 if request.session['vid'] == True:
                     supplier_obj = Supplier.objects.get(id=sid)
-                    DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                    DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
             return Response({'redirect_url': redirect_terminate_link})
         else:        
@@ -1081,7 +1364,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     print("printing in low risk else", redirect_terminate_link)
                     return Response({'redirect_url': redirect_terminate_link})
@@ -1099,7 +1382,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -1116,7 +1399,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -1133,7 +1416,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             
@@ -1150,7 +1433,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
 
@@ -1167,7 +1450,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'],browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
 
@@ -1184,7 +1467,7 @@ class GetRDResponse(APIView):
                     else:
                         if request.session['vid'] == True:
                             supplier_obj = Supplier.objects.get(id=sid)
-                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
+                            DuplicateorFraudPanelistID.objects.create(panelist_id=vid, project_id=pid, supplier_id=sid, supplier_name=supplier_obj.Supplier_Name, status='Terminated', threat_potential= request.data['Respondent']['threat_potential'] ,threat_potential_score= request.data['Respondent']['threat_potential_score'], duplicate_score=request.data['Surveys'][0]['duplicate_score'], browser=request.user_agent.browser.family, ip_adress=ip_address, user_country=request.data['Respondent']['country'], os=request.user_agent.os.family+request.user_agent.os.version_string, IE='external', survey_start_time =extermnal_start_time+" TimeZone:"+c3[2] , survey_end_time=external_end_current_time+" TimeZone:"+c3[2], county_mismath=request.data['Surveys'][0]['country_mismatch'], market=counrty_names)
 
                     return HttpResponseRedirect(redirect_terminate_link)
             # return Response(request.data)
@@ -1205,8 +1488,10 @@ class VendorMaskedLinkClick(APIView):
             ip = request.META.get('REMOTE_ADDR')
             ip_address = str(ip)
 
-
+        print("before calling getcountry")
         c3 = getCountry(ip_address)
+        print("c3==>", c3)
+
         if Country.objects.filter(code=c3[0]).exists():
             country_obj = Country.objects.get(code=c3[0])
             new_list = list(c3)
@@ -1214,7 +1499,7 @@ class VendorMaskedLinkClick(APIView):
 
             c3 = tuple(new_list)
 
-        print("after c3===>",c3[1].strftime("%c"))
+        # print("after c3===>",c3[1].strftime("%c"))
 
         request.session['external_start_time'] = str(c3[1].strftime("%c"))
 
@@ -1228,8 +1513,16 @@ class VendorMaskedLinkClick(APIView):
 
         getCountryName = getUserCountry()
 
+        # print("get countryname calling, ==>", getCountryName)
+
+        request.session['user_country'] = getCountryName
+        
+
         if project_obj.is_deleted or project_obj.status == 'Closed':
             return HttpResponse("<h1 style='text-align: center'>currently survey is not available. <br> Thank You.</h1>")
+
+        if project_obj.is_deleted or project_obj.status == 'On Hold':
+            return HttpResponse("<h1 style='text-align: center'>currently survey is on hold. <br> Thank You.</h1>")
 
 
         if vid.startswith("robas"):
@@ -1238,10 +1531,12 @@ class VendorMaskedLinkClick(APIView):
 
             extermnal_start_time = request.session['external_start_time']
 
-        
-            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+            if IESamplingStatus.objects.filter(Q(project_id=int(pid)) & Q(vendor_tid=vid)).exists():
+                IESamplingStatus.objects.filter().update(project_id=int(pid), status='Incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
+            else:
+                IESamplingStatus.objects.create(project_id=int(pid), status='Incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
 
-
+            print("redirect_link---> with robas==>", redirect_link)
             return HttpResponseRedirect(redirect_link)
 
 
@@ -1295,16 +1590,26 @@ class VendorMaskedLinkClick(APIView):
 
             extermnal_start_time = request.session['external_start_time']
 
-            IESamplingStatus.objects.create(project_id=int(pid), status='incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2])
+            if IESamplingStatus.objects.filter(Q(project_id=int(pid)) & Q(vendor_tid = vid)).exists():
+                IESamplingStatus.objects.filter(Q(project_id=int(pid)) & Q(vendor_tid = vid)).update(project_id=int(pid), status='Incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
+            else:
+                IESamplingStatus.objects.create(project_id=int(pid), status='Incomplete', IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=sid , client_id=vid, vendor_tid = vid, ip_adress=ip_address, user_country=c3[0], survey_start_time =extermnal_start_time+" TimeZone:"+c3[2], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
             
             return HttpResponseRedirect(redirect_link)
 
+        
+import ast
         
 @method_decorator([authorization_required], name='dispatch')
 class RequirementFormDetailApi(GenericAPIView):
     def get(self, request, pro, req):
         if RequirementForm.objects.filter(Q(id=req) & Q(project_id=pro)).exists():
             val = RequirementForm.objects.filter(id=req).values()
+            print("value of re==>", val)
+            for i in val:
+                print("==>", i['b2b_b2c_dropdowns'])
+                b2b_b2c_dropdowns = ast.literal_eval(i['b2b_b2c_dropdowns'])
+                i['b2b_b2c_dropdowns'] = b2b_b2c_dropdowns
             return Response({"result": {'requirement_form': val}})
         return Response({'result': {'error': 'requirement form or project not found'}}, status=HTTP_404_NOT_FOUND)
 
@@ -1346,7 +1651,7 @@ class RequirementFormDetailApi(GenericAPIView):
         # e_date = datetime.datetime.strptime(ending_date, "%d-%m-%Y  %H:%M:%S")
         # print(e_date)
 
-        if RequirementForm.objects.filter(~Q(id=req) & Q(subject_line=subject_line)).exists():
+        if RequirementForm.objects.filter(~Q(id=req) & Q(subject_line=subject_line) & Q(project_id=pro)).exists():
             return Response({'error': "Requirement form name is already taken"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         if RequirementForm.objects.filter(Q(id=req) & Q(project_id=pro)).exists():
@@ -1686,6 +1991,26 @@ class EmailTemplateAPI(APIView):
 
         return Response({'result': {'email-template': 'template created successfully'}})
 
+    def put(self, request, pk):
+        data = request.data
+
+        name = data['name']
+        subject = data['subject']
+        media_type = data['media_type']
+        sender = data['sender']
+        category = data['category']
+        event_type = data['event_type']
+        portal_name = data['portal_name']
+        content = data['content']
+        placeholder = data['placeholder']
+
+        email_template = EmailTemplate.objects.filter(id=pk).update(name=name, subject=subject, media_type=media_type, sender=sender,
+                                                      category=category, event_type=event_type, portal_name=portal_name, content=content, placeholder=placeholder)
+
+        return Response({'result': {'email-template': 'template updated successfully'}})
+
+
+
 @method_decorator([authorization_required], name='dispatch')
 class ThemeAPI(APIView):
     def get(self, request):
@@ -1743,9 +2068,9 @@ def getEventType(self, event_type_name):
 def redirectExternalSurveyStatus(link):
     return redirect(link)
 
-now = datetime.datetime.now()
-current_time = now.strftime("%H:%M:%S")
-print("cuurent time==>",current_time)
+# now = datetime.datetime.now()
+# current_time = now.strftime("%H:%M:%S")
+# print("cuurent time==>",current_time)
 # start_time = "11:59:00"
 # end_time = "2:00:00"
 
@@ -1766,6 +2091,8 @@ class SampleStatus(APIView):
     def post(self, request):
     
         data = request.data
+
+        project_obj = Project.objects.get(id=int(data['pid']))
 
         print("data value==>",data)
 
@@ -1823,29 +2150,30 @@ class SampleStatus(APIView):
             hostname=socket.gethostname()   
             IPAddr=socket.gethostbyname(hostname)
 
-            print("data of uid==> ", data['uid'])
+            print("data of uid==> ", data['uid'], data, supplier_id, data['pid'])
 
-            if(IESamplingStatus.objects.filter(Q(user_id=data['uid']) & Q(supplier_id=supplier_id) & Q(project_id=int(data['pid'])) & ~Q(status='incomplete')).exists()):
-                # print('coming to if block supplier id is', supplier_id)
+            print("request.session['user_country']==>", request.session['user_country'])
+
+            if(IESamplingStatus.objects.filter(Q(user_id=data['uid']) & Q(supplier_id=supplier_id) & Q(project_id=int(data['pid'])) & ~Q(status='Incomplete')).exists()):
+                print('coming to if block supplier id is', supplier_id)
                 url = str(ExternalSampling.objects.get(project_id=int(data['pid']), supplier_id=supplier_id).terminated_link)
                 updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
 
-                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'])
+                IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'].capitalize(), IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
 
                 return Response(updated_url)
             else:
                 # print('coming to else block supplier id is', supplier_id)
                   
-
                 print("vendor id befor store ==>", request.session['client_transaction_id'], data)
 
-                IESamplingStatus.objects.filter(Q(vendor_tid = request.session['client_transaction_id']) & Q(project_id=int(data['pid'])) & Q(supplier_id=supplier_id)).update(status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'], user_id=data['uid'])
+                ie_obj = IESamplingStatus.objects.filter(Q(vendor_tid = request.session['client_transaction_id']) & Q(project_id=int(data['pid'])) & Q(supplier_id=supplier_id)).update(status=data['status'].capitalize(), IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time+' TimeZone:'+c3[2],survey_end_time=external_end_current_time+' TimeZone:'+c3[2], vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=request.session['user_country'], duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score'], user_id=data['uid'], project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)
 
 
                 # IESamplingStatus.objects.create(user_id=data['uid'], project_id=int(data['pid']), status=data['status'], IE='external', os=os_with_version, browser=request.user_agent.browser.family, supplier_id=supplier_id, client_id=data['uid'], survey_start_time =extermnal_start_time,survey_end_time=external_end_current_time, vendor_tid = request.session['client_transaction_id'], ip_adress=ip_address, user_country=getCountryName, duplicate_score=request.session['duplicate_score'] ,threat_potential_score=request.session['thret_potential_score']) 
 
                 if(data['status'] == 'completed'):
-                    print("1")
+                    print("complete status 1")
                     url = str(ExternalSampling.objects.get(project_id=int(data['pid']), supplier_id=supplier_id).complete_link)
                     updated_url = url.replace('<#id#>', request.session['client_transaction_id'])
 
@@ -1947,7 +2275,7 @@ class SampleStatus(APIView):
 
                 user_obj = UserSurvey.objects.get(id=descrypted_uid)
                 
-                IESamplingStatus.objects.filter(user_id=descrypted_uid, project_id=int(data['pid']), IE='internal').update(status=data['status'], campaign_id=campaign_id, survey_end_time=end_current_time, browser=request.user_agent.browser.family , os=os_with_version, ip_adress=ip_address, user_country=user_obj.country)   
+                IESamplingStatus.objects.filter(user_id=descrypted_uid, project_id=int(data['pid']), IE='internal').update(status=data['status'], campaign_id=campaign_id, survey_end_time=end_current_time, browser=request.user_agent.browser.family , os=os_with_version, ip_adress=ip_address, user_country=user_obj.country, project_start_date=project_obj.start_date, project_end_date=project_obj.end_date)   
 
                 # url = request.session['offer_url'].replace(data['uid'], str(descrypted_uid))
 
@@ -2048,18 +2376,22 @@ class ProjectDashboardView(APIView):
         
 
         # internal data #
+
+        print("==>>",ProjectDashboard.objects.filter(project_id=pid, ie='external').exists())
+
         if ProjectDashboard.objects.filter(project_id=pid, ie='internal').exists():
+            print("if")
             rr = ProjectDashboard.objects.get(project_id=pid, ie='internal').response_rate
             total_invite_sent = ProjectDashboard.objects.get(project_id=pid, ie='internal').total_invite_sent
             total_spent = ProjectDashboard.objects.get(project_id=pid,ie='internal').total_spent
             total_clicks = UserClicks.objects.filter(project_id=pid, is_clicked=True).count()
 
             internal_total_count = IESamplingStatus.objects.filter(project_id=pid, IE='internal').count()
-            internal_completed = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='completed').count()
-            internal_terminated = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='terminated').count()
-            internal_quotas_full = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='quotasFull').count()
-            internal_quality_fail = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='qualityFailed').count()
-            internal_panel_duplicate = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='panelDuplicate').count()
+            internal_completed = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='Completed').count()
+            internal_terminated = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='Terminated').count()
+            internal_quotas_full = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='QuotasFull').count()
+            internal_quality_fail = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='QualityFailed').count()
+            internal_panel_duplicate = IESamplingStatus.objects.filter(project_id=pid, IE='internal', status='PanelDuplicate').count()
 
             internal_data = [{
                 'total_clicks': total_clicks,
@@ -2077,18 +2409,23 @@ class ProjectDashboardView(APIView):
 
             final_data = {'internal': internal_data, 'overAllExternalCount':overAllCountOfExternal, 'project_name': project_name}
         
-        else:
+        if ProjectDashboard.objects.filter(project_id=pid, ie='external').exists():
+            print("else ")
             external_sample_obj = ExternalSampling.objects.filter(project_id=pid).values('supplier_id', 'supplier__Supplier_Name')
             
 
             externalDict = {}
             externalList = []
 
-            total_completes_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='completed').count()
-            total_terminated_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='terminated').count()
-            total_qualityFailed_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='qualityFailed').count()
-            total_quotasFull_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='quotasFull').count()
-            total_panelDuplicate_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='panelDuplicate').count()
+            total_completes_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='Completed').count()
+
+            print("total complets==>",total_completes_of_external)
+
+
+            total_terminated_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='Terminated').count()
+            total_qualityFailed_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='QualityFailed').count()
+            total_quotasFull_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='QuotasFull').count()
+            total_panelDuplicate_of_external = IESamplingStatus.objects.filter(project_id=pid, IE='external', status='PanelDuplicate').count()
 
             # rd_duplicate_ids = DuplicateorFraudPanelistID.objects.filter(project_id=pid).values().count()
 
@@ -2106,13 +2443,17 @@ class ProjectDashboardView(APIView):
             } 
             total_completes_of_externalData = overAllCountOfExternal
 
+            print("overAllCountOfExternal==>", overAllCountOfExternal)
+
             for i in external_sample_obj:
-                # i['supplier_id']
-                external_total_complete = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='completed')
-                external_total_quality_fail = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='qualityFailed')
-                external_total_quotas_full = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='quotasFull')
-                external_total_panel_duplicate = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='panelDuplicate')
-                external_total_terminated = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='terminated')
+                print("supplier id==>", i['supplier_id'])
+                external_total_complete = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='Completed')
+                external_total_quality_fail = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='QualityFailed')
+                external_total_quotas_full = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='QuotasFull')
+                external_total_panel_duplicate = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='PanelDuplicate')
+                external_total_terminated = IESamplingStatus.objects.filter(project_id=pid, IE='external', supplier_id=i['supplier_id'], status='Terminated')
+
+                print("terminate count-->", external_total_terminated.count())
 
                 rd_duplicate_ids = DuplicateorFraudPanelistID.objects.filter(project_id=pid, supplier_id=i['supplier_id']).count()
                 
@@ -2131,9 +2472,16 @@ class ProjectDashboardView(APIView):
                 externalList.append(externalDict)
                 externalDict = {}
 
+                print("externalList==> 1-->", externalList)
+
             externalListData = externalList
+
+            print("externalList==>", externalList)
+            op = remove_duplicates_dashboard_data(externalList)
+
+            externalListData = op
             
-            final_data = {'external': externalList, 'overAllExternalCount':overAllCountOfExternal, 'project_name': project_name}
+            final_data = {'external': op, 'overAllExternalCount':overAllCountOfExternal, 'project_name': project_name}
 
         
         final_data = {'internal': internal_dataData, 'external': externalListData, 'overAllExternalCount':overAllCountOfExternal, 'project_name': project_name}
@@ -2178,6 +2526,17 @@ class ProjectDashboardView(APIView):
     #         return Response({'result': obj, 'external_sample_data': external_sample, 'project_name': project_name, 'supplier_name': SupplierMaskedLink.objects.filter(project_id=pid).values('supplier__Supplier_Name')})
     #     return Response({'error': 'project not found'})
 
+
+def remove_duplicates_dashboard_data(data):
+    seen = set()
+    unique_data = []
+    for item in data:
+        # Convert the dictionary to a frozenset of its items
+        item_tuple = frozenset(item.items())
+        if item_tuple not in seen:
+            seen.add(item_tuple)
+            unique_data.append(item)
+    return unique_data
 
 
 import itertools
@@ -2247,4 +2606,4 @@ class SendEmailThroughCelelry(APIView):
 
 
 
-    
+
