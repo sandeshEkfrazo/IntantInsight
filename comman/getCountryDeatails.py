@@ -53,7 +53,7 @@ def getCountry(ipAdress):
 
     response = requests.get(url)
     
-    print("--->>", response.status_code, response)
+    # print("--->>", response.status_code, response)
 
     if response.status_code == 200:
         data = response.json()
