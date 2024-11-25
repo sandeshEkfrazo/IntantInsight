@@ -59,6 +59,7 @@ import pandas as pd
 import csv
 from hashids import Hashids
 from datetime import timedelta
+from .Qfilters import *
 
 # Create your views here.
 
@@ -148,22 +149,46 @@ class DeleteOrRestoreCampaign(APIView):
 
         return Response({'message': 'camapign is deleted updated successfully'})
 
-
+from openpyxl import Workbook
 class ExportOrCloneCampaign(APIView):
     def post(self, request):
         data = request.data
 
         if data['is_export']:
-            response = HttpResponse(content_type='application/vnd.ms-excel')
 
-            writer = csv.writer(response)
+            # -------------- old code --------------
+            # response = HttpResponse(content_type='application/vnd.ms-excel')
 
-            writer.writerow(['Campaign Id', 'First name', 'Last name', 'Email', 'Status', 'DOB', 'Gender','Vendor Id', 'Date of Joining', 'City', 'State', 'Country', 'Age'])
+            # writer = csv.writer(response)
 
-            obj = UserSurvey.objects.filter(campaign_id=data['campaign_id']).values_list('campaign_id', 'first_name', 'last_name', 'email', 'status', 'dob', 'gender', 'supplier_id', 'date_of_joining','city', 'state', 'country', 'age')
-            for i in obj:
-                writer.writerow(i)
-            response['Content-Disposition'] = 'attachment; filename="campaign.xls"'
+            # writer.writerow(['ID','Campaign Id', 'First name', 'Last name', 'Email', 'Status', 'DOB', 'Gender','Vendor Id', 'Date of Joining', 'City', 'State', 'Country', 'Age'])
+
+            # obj = UserSurvey.objects.filter(campaign_id=data['campaign_id']).values_list('id','campaign_id', 'first_name', 'last_name', 'email', 'status', 'dob', 'gender', 'supplier_id', 'date_of_joining','city', 'state', 'country', 'age')
+            # for i in obj:
+            #     writer.writerow(i)
+            # response['Content-Disposition'] = 'attachment; filename="campaign.xlsx"'
+            # return response
+
+            # -------------- New code --------------
+
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="campaign.xlsx"'
+            
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Campaign Data"
+
+            # Header
+            ws.append(['ID', 'Tid', 'Campaign Id', 'First name', 'Last name', 'Email', 'Status', 'DOB', 'Gender', 'Vendor Id', 'Date of Joining', 'City', 'State', 'Country', 'Age'])
+
+            # Data rows
+            data = UserSurvey.objects.filter(campaign_id=request.data['campaign_id']).values_list(
+                'id', 'tid', 'campaign_id', 'first_name', 'last_name', 'email', 'status', 'dob', 'gender', 'supplier_id', 'date_of_joining', 'city', 'state', 'country', 'age'
+            )
+            for row in data:
+                ws.append(row)
+
+            wb.save(response)
             return response
 
         else:
@@ -189,24 +214,40 @@ class CampaignView(viewsets.ModelViewSet):
     pagination_class = MyPagination
     queryset = Campaign.objects.filter().order_by('-id')
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
+    # def get_queryset(self):
+    #     if self.request.query_params.get('is_deleted') == "True":
+    #         queryset = super().get_queryset().filter(is_deleted=True)
+    #     else:
+    #         queryset = super().get_queryset().filter(is_deleted=False)
 
-        should_paginate = self.request.query_params.get('paginate', False)
+    #     should_paginate = self.request.query_params.get('paginate', False)
 
-        if should_paginate:
+    #     if should_paginate:
         
-            page_size = self.request.query_params.get('page_size')
-            if page_size is not None:
-                self.pagination_class.page_size = int(page_size)
+    #         page_size = self.request.query_params.get('page_size')
+    #         if page_size is not None:
+    #             self.pagination_class.page_size = int(page_size)
             
-            page_number = self.request.query_params.get('page')
-            if page_number is not None:
-                self.pagination_class.page = int(page_number)
+    #         page_number = self.request.query_params.get('page')
+    #         if page_number is not None:
+    #             self.pagination_class.page = int(page_number)
 
-            return self.paginate_queryset(queryset)
+    #         return self.paginate_queryset(queryset)
         
-        return queryset
+    #     return queryset
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('-id')
+
+        page_size = self.request.query_params.get('page_size')
+        page = self.request.query_params.get('page')
+
+        result = filterCampaign(queryset, self.request.query_params)
+
+        if not page and not page_size:
+            self.pagination_class = None
+            return super().get_queryset()
+        return result
 
     def retrieve(self, request, *args, **kwargs):
         try:    
@@ -399,7 +440,7 @@ class CamapignSupllierLink(APIView):
                 send_mail(
                     'New Offer',
                     'Congratulation You have Got The New Offer Start Sharing with Your\nCamapign Link\n'+supllier_camapign_link,
-                    'gunjan@ekfrazo.in',
+                    settings.DEFAULT_FROM_EMAIL,
                     [supplier_obj.Email],
                     fail_silently=False,
                 )
@@ -854,6 +895,9 @@ class CampaignSubmitApi(APIView):
         
   
         camapaign_url = Campaign.objects.get(id=campaign_id).surveyTemplate_link
+
+        print("camapaign_url============>", camapaign_url)
+
         url__ = camapaign_url+"&sid="+str(supplier_id)+"&panelist_id="+str(user_survey.id)+"&tid="+str(tid)
 
         url = PixcelCode.objects.get(campaign_id=campaign_id).s2s_postback_pixel_code
@@ -996,6 +1040,28 @@ class BuildCriteria(APIView):
         data1 = Answer.objects.filter(query).values() 
         return Response({'result': {'count': count_data.values('user_survey_id').distinct().count(), 'requested_data': count_data.values('user_survey__email', 'user_survey__id', 'user_survey__country', 'user_survey__city').distinct() }})
 
+class BuildCriteriaForReports(APIView):
+    def post(self, request):
+        data = request.data  
+
+        criterias = data.get('criteria')
+        criteria_operator = data.get('criteria_operator')
+
+        operator = {"AND": Q.AND, "OR": Q.OR, "NOT": Q.negate}
+        query = Q(Q_object_creater(self ,criterias[0]['question_id'], criterias[0]['operator_id'], criterias[0]['answer'], criterias[0]['format_type']))
+        for i in range(1, len(criterias)):
+            print(i)
+            q_object = Q_object_creater(self ,criterias[i]['question_id'], criterias[i]['operator_id'], criterias[i]['answer'], criterias[i]['format_type'])
+            query.add(q_object, operator.get(criteria_operator[i-1]))
+
+        # count_data = Answer.objects.filter(query).count()   
+        count_data = Answer.objects.all().select_related('user_survey').filter(query)
+                
+        # print("count",count_data)
+        
+        data1 = Answer.objects.filter(query).values() 
+        return Response({'result': {'count': count_data.values('user_survey_id').distinct().count(), 'requested_data': count_data.values('user_survey__first_name', 'user_survey__gender', 'user_survey__dob', 'user_survey__panelist_id','user_survey__email', 'user_survey__is_email_verified', 'user_survey__city', 'user_survey__country', 'user_survey__status').distinct() }})
+
 class DrawSamples(GenericAPIView):
     def post(self, request):
         data = request.data
@@ -1058,6 +1124,42 @@ class getAllPanelistEmail(APIView):
 # ps = make_password("10259")
 # print(ps)
 # print(check_password("10259", ps))
+
+class CommunqueSendOut(APIView):
+
+    def post(self, request):
+        data = request.data 
+
+        template_id = data.get('template_id')
+        shedule = data['shedule']
+        emails = data['emails']
+
+        val = EmailTemplate.objects.get(id=template_id)
+
+        sender = val.sender
+        subject = val.subject
+
+        email_body = val.content
+
+        if shedule is None:
+
+            clocked_obj = ClockedSchedule.objects.create(
+                clocked_time = datetime.datetime.now() + timedelta(seconds=5)
+            )
+            
+            task_start = PeriodicTask.objects.create(name="CommuniqueschduleSendoutNow"+str(clocked_obj.id), task="panelbuilding.tasks.CommuniqueschduleSendoutNow",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'emails': emails, 'sender': sender, 'email_body': email_body, 'subject': subject}))
+
+        else:
+            clocked_obj = ClockedSchedule.objects.create(
+                    clocked_time = shedule['datetime']
+                )
+                
+            task_start = PeriodicTask.objects.create(name="CommuniqueschduleSendoutNow"+str(clocked_obj.id), task="panelbuilding.tasks.CommuniqueschduleSendoutNow",clocked_id=clocked_obj.id, one_off=True, kwargs=json.dumps({'emails': emails, 'sender': sender, 'email_body': email_body, 'subject': subject}))
+
+        return Response({'result': {'count': 'mail has been scheduled now successfully'}})
+
+            
+
 
 class SendOut(APIView):
     def post(self, request):
@@ -1968,9 +2070,12 @@ class getLanguageForSurvey(APIView):
 
         if prescreener_id:  
             pcp_obj = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id).values()
+            
             for i in pcp_obj:
-                # print(i['question_library'])
-                lang_obj = QuestionLibraryWithLanguages.objects.filter(base_queestion_id=i['question_library_id']).values('created_question_language__language')
+                if i['is_deleted_question'] == False:
+
+                    lang_obj = QuestionLibraryWithLanguages.objects.filter(base_queestion_id=i['question_library_id']).values('created_question_language__language')
+
             return Response(lang_obj)
 
         if pe_campaign_id:  
@@ -1993,10 +2098,8 @@ class SurveyTemplateApiView(APIView):
 
         language = request.GET.get('language')
 
-        print("language==>", language)
-        
-
-        print("panelistId===>>", panelist_id)
+        # print("language==>", language)       
+        # print("panelistId===>>", panelist_id)
 
         if prescreener_id:
             pages_for_prescreener = PeCampaignCampaignPrescreenerQuestionLibraryPage.objects.filter(prescreener_id=prescreener_id, is_deleted_question=False).values()
@@ -2019,6 +2122,7 @@ class SurveyTemplateApiView(APIView):
 
                         if language !='english':
                             lang_obj = QuestionLibraryWithLanguages.objects.filter(base_queestion_id=p['question_library_id']).values()
+                            
                             page_dict["q_lib"] = []
                                 # page_questions = {}
 

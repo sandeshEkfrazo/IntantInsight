@@ -167,7 +167,7 @@ class PeCampaignView(GenericAPIView):
             return Response({'result': "Campaign name already taken"}, status=HTTP_400_BAD_REQUEST)
 
         if PeCampaignType.objects.filter(id=pe_campaign_type_id).exists():
-            pe_campaign = PeCampaign.objects.create(market=market ,campaign_name=campaign_name ,points=points ,status=status ,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link, created_by_id=created_by ,updated_by_id=updated_by)
+            pe_campaign = PeCampaign.objects.create(market_id=market ,campaign_name=campaign_name ,points=points ,status=status ,pe_campaign_type_id=pe_campaign_type_id ,profile_type=profile_type ,external_profile_link=external_profile_link, created_by_id=created_by ,updated_by_id=updated_by)
 
             # if question_library_id is not None: 
             #     for questions in question_library_id:
@@ -947,11 +947,32 @@ class PageRoutingLogicApiView(GenericAPIView):
         # if request.query_params['campaign_id'] != "null":
         if request.GET.get('campaign_id'):
             data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            for i in data:
+                for j in i['logic']['dataset']:
+                    option_name = QuestionChoice.objects.get(id=j['answer']).name
+                    question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                    operator_name = QuestionOperator.objects.get(id=j['operator_id']).name
+
+                    j['answer_name'] = option_name
+                    j['question_name'] = question_name
+                    j['operator_name'] = operator_name
+
             return Response({'data': data})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            data = PageRoutingLogic.objects.filter(pe_campaign=request.query_params['pe_campaign_id']).values()
+            for i in data:
+                for j in i['logic']['dataset']:
+                    option_name = QuestionChoice.objects.get(id=j['answer']).name
+                    question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                    operator_name = QuestionOperator.objects.get(id=j['operator_id']).name
+
+                    j['answer_name'] = option_name
+                    j['question_name'] = question_name
+                    j['operator_name'] = operator_name
+
+            return Response({'data': data})
         
         # if request.query_params['prescreener_id'] != "null":
         if request.GET.get('prescreener_id'):
@@ -1003,12 +1024,13 @@ class PageRoutingLogicApiView(GenericAPIView):
         routing_logic_id = request.GET.get('routing_logic_id')
 
         if request.GET.get('campaign_id'):
-            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
-            return Response({'data': data})
+            PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id'], id=routing_logic_id).delete()
+            return Response({'data': "routing logic deleted successfully!"})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            PageRoutingLogic.objects.filter(pe_campaign_id=request.query_params['pe_campaign_id'], id=routing_logic_id).delete()
+            return Response({'data': "routing logic deleted successfully!"})
 
         if request.GET.get('prescreener_id'):
             data = PageRoutingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=routing_logic_id).delete()
@@ -1024,12 +1046,39 @@ class PageMaskingLogicApiView(GenericAPIView):
         
         # if request.query_params['campaign_id'] != "null":
         if request.GET.get('campaign_id'):
-            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            data = PageMaskingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+
+            for j in data:
+                option_name = QuestionChoice.objects.get(id=j['questio_choice_id']).name
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+
+                hide_answer_name = QuestionChoice.objects.get(id=j['hide_answer_id']).name
+                targeted_question = QuestionLibrary.objects.get(id=j['target_question_id']).question_name
+
+                j['answer_name'] = option_name
+                j['targeted_question_name'] = targeted_question
+                j['hide_answer_name'] = hide_answer_name
+                j['question_name'] = question_name
+            
             return Response({'data': data})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            data = PageMaskingLogic.objects.filter(pe_campaign_id=request.query_params['pe_campaign_id']).values()
+
+            for j in data:
+                option_name = QuestionChoice.objects.get(id=j['questio_choice_id']).name
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+
+                hide_answer_name = QuestionChoice.objects.get(id=j['hide_answer_id']).name
+                targeted_question = QuestionLibrary.objects.get(id=j['target_question_id']).question_name
+
+                j['answer_name'] = option_name
+                j['targeted_question_name'] = targeted_question
+                j['hide_answer_name'] = hide_answer_name
+                j['question_name'] = question_name
+            
+            return Response({'data': data})
         
         # if request.query_params['prescreener_id'] != "null":
         if request.GET.get('prescreener_id'):
@@ -1079,12 +1128,13 @@ class PageMaskingLogicApiView(GenericAPIView):
         masking_logic_id = request.GET.get('masking_logic_id')
 
         if request.GET.get('campaign_id'):
-            data = PageMaskingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
-            return Response({'data': data})
+            data = PageMaskingLogic.objects.filter(campaign_id=request.query_params['campaign_id'], id=masking_logic_id).delete()
+            return Response({'data': "masking logic deleted successfully!"})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            data = PageMaskingLogic.objects.filter(pe_campaign_id=request.query_params['pe_campaign_id'], id=masking_logic_id).delete()
+            return Response({'data': "masking logic deleted successfully!"})
 
         if request.GET.get('prescreener_id'):
             data = PageMaskingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=masking_logic_id).delete()
@@ -1098,12 +1148,21 @@ class PagePipingLogicApiView(GenericAPIView):
         
         # if request.query_params['campaign_id'] != "null":
         if request.GET.get('campaign_id'):
-            data = PageRoutingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            data = PagePipingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
+            for j in data:
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                j['question_name'] = question_name
+
             return Response({'data': data})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            data = PagePipingLogic.objects.filter(pe_campaign_id=request.query_params['pe_campaign_id']).values()
+            for j in data:
+                question_name = QuestionLibrary.objects.get(id=j['question_id']).question_name
+                j['question_name'] = question_name
+
+            return Response({'data': data})
         
         # if request.query_params['prescreener_id'] != "null":
         if request.GET.get('prescreener_id'):
@@ -1143,12 +1202,13 @@ class PagePipingLogicApiView(GenericAPIView):
         piping_logic_id = request.GET.get('piping_logic_id')
 
         if request.GET.get('campaign_id'):
-            data = PagePipingLogic.objects.filter(campaign_id=request.query_params['campaign_id']).values()
-            return Response({'data': data})
+            data = PagePipingLogic.objects.filter(campaign_id=request.query_params['campaign_id'], id=piping_logic_id).delete()
+            return Response({'data': "piping logic deleted successfully!"})
 
         # if request.query_params['pe_campaign_id'] != "null":
         if request.GET.get('pe_campaign_id'):
-            return Response('pe_campaign id')
+            data = PagePipingLogic.objects.filter(oe_campaign_id=request.query_params['pe_campaign_id'], id=piping_logic_id).delete()
+            return Response({'data': "piping logic deleted successfully!"})
 
         if request.GET.get('prescreener_id'):
             data = PagePipingLogic.objects.filter(prescreener_id=request.query_params['prescreener_id'], id=piping_logic_id).delete()

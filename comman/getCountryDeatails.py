@@ -46,14 +46,20 @@ def getCountry(ipAdress):
 
     usable_ip_token = IPToken.objects.get(usable=True)
 
+    print("usable_ip_token=======>", usable_ip_token)
+
     # url = f"http://ipinfo.io/{ipAdress}/json"
     # url = f"https://ipinfo.io/{ipAdress}/?token=15262704c2a908"
     url = f"https://ipinfo.io/{ipAdress}/?token={usable_ip_token.token}"
 
+    print("ip url--->",url)
+
+
+
 
     response = requests.get(url)
     
-    # print("--->>", response.status_code, response)
+    print("response =======--->>", response.status_code, response)
 
     if response.status_code == 200:
         data = response.json()

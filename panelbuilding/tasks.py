@@ -7,6 +7,37 @@ from sampling.models import *
 from hashids import Hashids
 from usersurvey.models import *
 
+@shared_task(bind=True)
+def CommuniqueschduleSendoutNow(self, *args, **kwargs):   
+
+    email_body = kwargs['email_body']
+
+    soup = BeautifulSoup(email_body, 'html')
+
+    panelist_first_name = soup.find("span", class_="FirstName")
+    panelist_last_name = soup.find("span", class_="LastName")
+
+    for i in kwargs['emails']:
+
+        panelist_obj = UserSurvey.objects.get(email=i)
+
+        print()
+
+        if panelist_obj.first_name is None or panelist_obj.last_name is None:
+            panelist_first_name.string.replace_with("Panelist")
+            panelist_last_name.string.replace_with("")
+        else:
+            panelist_first_name.string.replace_with(panelist_obj.first_name)
+            panelist_last_name.string.replace_with(panelist_obj.last_name)
+
+        em_body = soup.prettify()
+
+        email = EmailMessage(kwargs['subject'], em_body, from_email=kwargs['sender'], to=[i])
+        email.content_subtype = "html"
+        email.send(fail_silently=False)
+
+    return "Mail Sent Successfully"
+
 
 @shared_task(bind=True)
 def ScheduleSendoutNow(self, *args, **kwargs):   
